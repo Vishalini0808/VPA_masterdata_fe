@@ -1,0 +1,21 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.MTOConfigurations"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        title="MTO Configuration Master"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+
+            <Title
+                text="MTO Configuration Master"
+                class="sapUiMediumMargin"/>
+
+        </content>
+
+    </Page>
+
+</mvc:View>

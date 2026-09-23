@@ -1,0 +1,306 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.Models"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Page
+        title="Model Master"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+
+            <Table
+                id="modelTable"
+                items="{ path: '/Models' }"
+                growing="true"
+                growingThreshold="20"
+                mode="None">
+
+                <headerToolbar>
+                    <Toolbar>
+
+                        <Title
+                            text="Models"
+                            level="H2"/>
+
+                        <ToolbarSpacer/>
+
+                        <Button
+                            text="Add Model"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press=".onAdd"/>
+
+                    </Toolbar>
+                </headerToolbar>
+
+                <columns>
+
+                    <Column>
+                        <Text text="Model Code"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Description"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Order Type"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Engine"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="CC / Watt"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="GST %"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Dealer Margin %"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Status"/>
+                    </Column>
+
+                    <Column width="8rem">
+                        <Text text="Actions"/>
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{modelCode}"/>
+
+                            <Text text="{modelDescription}"/>
+
+                            <Text text="{orderType}"/>
+
+                            <Text text="{engineType}"/>
+
+                            <Text text="{ccWatt}"/>
+
+                            <Text text="{gstPercent}"/>
+
+                            <Text text="{dealerMarginPercent}"/>
+
+                            <ObjectStatus
+                                text="{status}"/>
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="Edit"
+                                    press=".onEdit"/>
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="Delete"
+                                    press=".onDelete"/>
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
+
+        </content>
+
+
+        <!-- dialog -->
+
+        <dependents>
+
+    <Dialog
+        id="modelDialog"
+        title="Add Model"
+        contentWidth="600px"
+        stretchOnPhone="true">
+
+        <content>
+
+            <VBox class="sapUiMediumMargin">
+
+                <Label text="Model Code" required="true"/>
+                <Input
+                    id="modelCodeInput"
+                    placeholder="Enter model code"/>
+
+                <Label
+                    text="Valid From"
+                    class="sapUiSmallMarginTop"/>
+                <DatePicker
+                    id="validFromInput"
+                    valueFormat="yyyy-MM-dd"
+                    displayFormat="dd-MM-yyyy"/>
+
+                <Label
+                    text="Order Type"
+                    class="sapUiSmallMarginTop"/>
+                <Select
+                    id="orderTypeInput"
+                    selectedKey="MTS">
+
+                    <items>
+                        <core:Item
+                            key="MTS"
+                            text="MTS"/>
+                        <core:Item
+                            key="MTO"
+                            text="MTO"/>
+                    </items>
+
+                </Select>
+
+                <Label
+                    text="Model Description"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="modelDescriptionInput"
+                    placeholder="Enter description"/>
+
+                <Label
+                    text="Engine Type"
+                    class="sapUiSmallMarginTop"/>
+                <Select
+                    id="engineTypeInput"
+                    selectedKey="Petrol">
+
+                    <items>
+                        <core:Item
+                            key="Petrol"
+                            text="Petrol"/>
+                        <core:Item
+                            key="EV"
+                            text="EV"/>
+                    </items>
+
+                </Select>
+
+                <Label
+                    text="CC / Watt"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="ccWattInput"
+                    type="Number"/>
+
+                <Label
+                    text="GST %"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="gstPercentInput"
+                    type="Number"/>
+
+                <Label
+                    text="Dealer Margin %"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="dealerMarginPercentInput"
+                    type="Number"/>
+
+                <Label
+                    text="CSD Discount %"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="csdDiscountPercentInput"
+                    type="Number"/>
+
+                <Label
+                    text="CSD GST %"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="csdGstPercentInput"
+                    type="Number"/>
+
+                <Label
+                    text="GeM Value"
+                    class="sapUiSmallMarginTop"/>
+                <Input
+                    id="gemValueInput"
+                    type="Number"/>
+
+                <Label
+                    text="Status"
+                    class="sapUiSmallMarginTop"/>
+                <Select
+                    id="statusInput"
+                    selectedKey="ACTIVE">
+
+                    <items>
+                        <core:Item
+                            key="ACTIVE"
+                            text="ACTIVE"/>
+                        <core:Item
+                            key="INACTIVE"
+                            text="INACTIVE"/>
+                    </items>
+
+                </Select>
+
+                <Label
+                    text="Approval Status"
+                    class="sapUiSmallMarginTop"/>
+                <Select
+                    id="approvalStatusInput"
+                    selectedKey="DRAFT">
+
+                    <items>
+                        <core:Item
+                            key="DRAFT"
+                            text="DRAFT"/>
+                        <core:Item
+                            key="SUBMITTED"
+                            text="SUBMITTED"/>
+                        <core:Item
+                            key="APPROVED"
+                            text="APPROVED"/>
+                        <core:Item
+                            key="REJECTED"
+                            text="REJECTED"/>
+                    </items>
+
+                </Select>
+
+            </VBox>
+
+        </content>
+
+        <beginButton>
+            <Button
+                text="Save"
+                type="Emphasized"
+                press=".onSave"/>
+        </beginButton>
+
+        <endButton>
+            <Button
+                text="Cancel"
+                press=".onCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</dependents>
+
+    </Page>
+
+</mvc:View>

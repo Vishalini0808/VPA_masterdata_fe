@@ -1,0 +1,153 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.PricingComponents"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        title="Pricing Components"
+        showNavButton="true"
+        navButtonPress="onNavBack">
+
+        <headerContent>
+            <Button
+                text="Add Pricing Component"
+                icon="sap-icon://add"
+                type="Emphasized"
+                press="onAdd" />
+        </headerContent>
+
+        <content>
+
+            <Table
+                id="pricingComponentsTable"
+                items="{/PricingComponents}"
+                growing="true"
+                growingThreshold="20">
+
+                <columns>
+
+                    <Column>
+                        <Text text="Region Code"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Engine Type"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Valid From"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Helmet"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Transportation"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Helmet Margin"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Other Expenses Lessthan 500"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Other Expenses Greaterthan 500"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Insurance Lessthan 350"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Insurance Greaterthan 350"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="TPA/PA Lessthan 350"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="TPA/PA Greaterthan 350"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="No Plate Charges"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Approval Status"/>
+                    </Column>
+
+                    <Column width="10rem">
+                        <Text text="Actions"/>
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{regionCode}"/>
+
+                            <Text text="{engineType}"/>
+
+                            <Text text="{validFrom}"/>
+
+                            <Text text="{helmet}"/>
+
+                            <Text text="{transportation}"/>
+
+                            <Text text="{helmetMargin}"/>
+
+                            <Text text="{otherExpensesBelow500}"/>
+
+                            <Text text="{otherExpensesAbove500}"/>
+
+                            <Text text="{insuranceRateBelow350}"/>
+
+                            <Text text="{insuranceRateAbove350}"/>
+
+                            <Text text="{tpaPaBelow350}"/>
+
+                            <Text text="{tpaPaAbove350}"/>
+
+                            <Text text="{noPlateCharges}"/>
+
+                            <Text text="{approvalStatus}"/>
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="Edit"
+                                    press="onEdit"/>
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="Delete"
+                                    press="onDelete"/>
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
+
+        </content>
+
+    </Page>
+
+</mvc:View>

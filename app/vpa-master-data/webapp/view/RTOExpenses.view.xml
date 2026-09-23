@@ -1,0 +1,21 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.RTOExpenses"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        title="RTO Expenses Master"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+
+            <Title
+                text="RTO Expenses Master"
+                class="sapUiMediumMargin"/>
+
+        </content>
+
+    </Page>
+
+</mvc:View>

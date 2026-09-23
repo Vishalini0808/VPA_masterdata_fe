@@ -1,0 +1,163 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.Regions"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        id="regionPage"
+        title="Region Master"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+
+            <Table
+                id="regionTable"
+                items="{path: '/Regions'}"
+                growing="true"
+                growingThreshold="20">
+
+                <headerToolbar>
+                    <Toolbar>
+
+                        <Title
+                            text="Regions"
+                            level="H2"/>
+
+                        <ToolbarSpacer/>
+
+                        <Button
+                            text="Add Region"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press=".onAdd"/>
+
+                    </Toolbar>
+                </headerToolbar>
+
+                <columns>
+
+                    <Column>
+                        <Text text="Region Code"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="Region Name"/>
+                    </Column>
+
+                    <Column>
+                        <Text text="RTO Basis"/>
+                    </Column>
+
+                    <Column width="10rem">
+                        <Text text="Actions"/>
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{regionCode}"/>
+
+                            <Text text="{regionName}"/>
+
+                            <Text text="{rtoBasis}"/>
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="Edit"
+                                    press=".onEdit"/>
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="Delete"
+                                    press=".onDelete"/>
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
+
+        </content>
+
+
+
+        <!-- dialog -->
+
+        <dependents>
+
+    <Dialog
+        id="regionDialog"
+        title="Add Region"
+        contentWidth="400px">
+
+        <content>
+
+            <VBox class="sapUiMediumMargin">
+
+                <Label
+                    text="Region Code"
+                    required="true"/>
+
+                <Input
+                    id="regionCodeInput"
+                    placeholder="Enter region code"
+                    editable="false"/>
+
+                <Label
+                    text="Region Name"
+                    class="sapUiSmallMarginTop"/>
+
+                <Input
+                    id="regionNameInput"
+                    placeholder="Enter region name"/>
+
+                <Label
+                    text="RTO Basis"
+                    class="sapUiSmallMarginTop"/>
+
+                <Input
+                    id="rtoBasisInput"
+                    placeholder="Enter RTO basis"/>
+
+            </VBox>
+
+        </content>
+
+        <beginButton>
+
+            <Button
+                text="Save"
+                type="Emphasized"
+                press=".onSave"/>
+
+        </beginButton>
+
+        <endButton>
+
+            <Button
+                text="Cancel"
+                press=".onCancel"/>
+
+        </endButton>
+
+    </Dialog>
+
+</dependents>
+
+    </Page>
+
+</mvc:View>

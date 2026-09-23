@@ -1,0 +1,46 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.View1"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core">
+
+    <Page
+        id="masterDataPage"
+        title="Master Data Management">
+
+        <content>
+
+            <f:GridList
+                id="masterDataGrid"
+                class="sapUiResponsiveContentPadding"
+                items="{tile>/tiles}">
+
+                <f:GridListItem
+                    type="Active"
+                    press=".onTilePress">
+
+                    <VBox
+                        height="150px"
+                        alignItems="Center"
+                        justifyContent="Center">
+
+                        <core:Icon
+                            src="{tile>icon}"
+                            size="2.5rem"/>
+
+                        <Title
+                            text="{tile>title}"
+                            class="sapUiSmallMarginTop"/>
+
+                    </VBox>
+
+                </f:GridListItem>
+
+            </f:GridList>
+
+        </content>
+
+    </Page>
+
+</mvc:View>

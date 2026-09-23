@@ -1,0 +1,39 @@
+{
+    "tiles": [
+        {
+            "title": "Region Master",
+            "key": "regions",
+            "icon": "sap-icon://world"
+        },
+        {
+            "title": "Model Master",
+            "key": "models",
+            "icon": "sap-icon://product"
+        },
+        {
+            "title": "Pricing Components",
+            "key": "pricingComponents",
+            "icon": "sap-icon://money-bills"
+        },
+        {
+            "title": "RTO Master",
+            "key": "rtoMasters",
+            "icon": "sap-icon://car-rental"
+        },
+        {
+            "title": "RTO Expense",
+            "key": "rtoExpenses",
+            "icon": "sap-icon://expense-report"
+        },
+        {
+            "title": "Parts Master",
+            "key": "parts",
+            "icon": "sap-icon://technical-object"
+        },
+        {
+            "title": "MTO Configuration",
+            "key": "mtoConfigurations",
+            "icon": "sap-icon://action-settings"
+        }
+    ]
+}

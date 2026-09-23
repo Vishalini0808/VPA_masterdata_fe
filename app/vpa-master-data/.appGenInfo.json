@@ -1,0 +1,23 @@
+{
+  "generationParameters": {
+    "generationDate": "Mon Sep 21 2026 07:21:37 GMT+0000 (Coordinated Universal Time)",
+    "generatorPlatform": "SAP Business Application Studio",
+    "serviceType": "OData URL",
+    "metadataFilename": "",
+    "serviceUrl": "https://b1c17123trial-dev-vpa-srv.cfapps.us10-003.hana.ondemand.com/odata/v4/master",
+    "appName": "vpa-master-data",
+    "appTitle": "VPA Master Data",
+    "appDescription": "VPA Master Data Management",
+    "appNamespace": "",
+    "ui5Theme": "sap_horizon",
+    "ui5Version": "1.152.0",
+    "enableEslint": true,
+    "enableTypeScript": false,
+    "showMockDataInfo": true,
+    "generatorVersion": "1.32.0",
+    "template": "Basic V4",
+    "generatorName": "SAP Fiori Application Generator",
+    "entityRelatedConfig": [],
+    "launchText": "To launch the generated application, run the following from the generated application root folder:\n\n```\n    npm start\n```"
+  }
+}

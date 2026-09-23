@@ -1,0 +1,21 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.Parts"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        title="Parts Master"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+
+            <Title
+                text="Parts Master"
+                class="sapUiMediumMargin"/>
+
+        </content>
+
+    </Page>
+
+</mvc:View>

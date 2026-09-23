@@ -1,0 +1,187 @@
+{
+  "_version": "1.89.0",
+  "sap.app": {
+    "id": "vpamasterdata",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.32.0",
+      "toolsId": "429366a5-ebc0-4df3-876a-ee4c3c19bddf"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/master/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.152.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "vpamasterdata.i18n.i18n"
+        }
+      },
+      "tile": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "model/tiles.json"
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "transition": "slide",
+        "type": "View",
+        "viewType": "XML",
+        "path": "vpamasterdata.view",
+        "async": true,
+        "viewPath": "vpamasterdata.view"
+      },
+      "routes": [
+        {
+          "name": "RouteView1",
+          "pattern": "",
+          "target": "TargetView1"
+        },
+        {
+          "name": "regions",
+          "pattern": "regions",
+          "target": "regions"
+        },
+        {
+          "name": "models",
+          "pattern": "models",
+          "target": "models"
+        },
+        {
+          "name": "pricingComponents",
+          "pattern": "pricingComponents",
+          "target": "pricingComponents"
+        },
+        {
+          "name": "rtoMasters",
+          "pattern": "rtoMasters",
+          "target": "rtoMasters"
+        },
+        {
+          "name": "rtoExpenses",
+          "pattern": "rtoExpenses",
+          "target": "rtoExpenses"
+        },
+        {
+          "name": "parts",
+          "pattern": "parts",
+          "target": "parts"
+        },
+        {
+          "name": "mtoConfigurations",
+          "pattern": "mtoConfigurations",
+          "target": "mtoConfigurations"
+        }
+      ],
+      "targets": {
+        "TargetView1": {
+          "id": "View1",
+          "name": "View1"
+        },
+        "regions": {
+          "id": "Regions",
+          "name": "Regions"
+        },
+        "models": {
+          "id": "Models",
+          "name": "Models"
+        },
+        "pricingComponents": {
+          "id": "PricingComponents",
+          "name": "PricingComponents"
+        },
+        "rtoMasters": {
+          "id": "RTOMasters",
+          "name": "RTOMasters"
+        },
+        "rtoExpenses": {
+          "id": "RTOExpenses",
+          "name": "RTOExpenses"
+        },
+        "parts": {
+          "id": "Parts",
+          "name": "Parts"
+        },
+        "mtoConfigurations": {
+          "id": "MTOConfigurations",
+          "name": "MTOConfigurations"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "vpamasterdata.view.App",
+      "type": "XML",
+      "id": "App",
+      "async": true
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "vpamasterdata"
+  }
+}
