@@ -3,16 +3,94 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m">
 
-    <Page
-        title="Parts Master"
-        showNavButton="true"
-        navButtonPress=".onNavBack">
+    <Page title="Parts">
+
+        <headerContent>
+            <Button
+                text="Add Part"
+                type="Emphasized"
+                press=".onAdd" />
+        </headerContent>
 
         <content>
 
-            <Title
-                text="Parts Master"
-                class="sapUiMediumMargin"/>
+            <Table
+                id="partsTable"
+                items="{/Parts}"
+                growing="true"
+                growingThreshold="20">
+
+                <columns>
+
+                    <Column>
+                        <Text text="Part Code" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Valid From" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Description" />
+                    </Column>
+
+                    <Column>
+                        <Text text="MIY Cost" />
+                    </Column>
+
+                    <Column>
+                        <Text text="MIY Markup" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Price Indicator" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Actions" />
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{partCode}" />
+
+                            <Text text="{validFrom}" />
+
+                            <Text text="{description}" />
+
+                            <Text text="{miyCost}" />
+
+                            <Text text="{miyMarkup}" />
+
+                            <Text text="{priceIndicator}" />
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    press=".onEdit" />
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    press=".onDelete" />
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
 
         </content>
 
