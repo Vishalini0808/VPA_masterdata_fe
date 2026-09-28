@@ -4,15 +4,111 @@
     xmlns="sap.m">
 
     <Page
-        title="RTO Expenses Master"
+        title="RTO Expenses"
         showNavButton="true"
-        navButtonPress=".onNavBack">
+        navButtonPress="onNavBack">
+
+        <headerContent>
+            <Button
+                text="Add RTO Expense"
+                icon="sap-icon://add"
+                type="Emphasized"
+                press="onAdd" />
+        </headerContent>
 
         <content>
 
-            <Title
-                text="RTO Expenses Master"
-                class="sapUiMediumMargin"/>
+            <Table
+                id="rtoExpensesTable"
+                items="{/RTOExpense}"
+                growing="true"
+                growingThreshold="20">
+
+                <columns>
+
+                    <Column>
+                        <Text text="Region" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Slab" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Engine Type" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Minimum Price" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Maximum Price" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Percentage" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Fixed Amount" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Approval Status" />
+                    </Column>
+
+                    <Column width="8rem">
+                        <Text text="Actions" />
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{region_regionCode}" />
+
+                            <Text text="{slab}" />
+
+                            <Text text="{engineType}" />
+
+                            <Text text="{minimumPrice}" />
+
+                            <Text text="{maximumPrice}" />
+
+                            <Text text="{percentage}" />
+
+                            <Text text="{fixedAmount}" />
+
+                            <Text text="{approvalStatus}" />
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="Edit"
+                                    press="onEdit" />
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="Delete"
+                                    press="onDelete" />
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
 
         </content>
 

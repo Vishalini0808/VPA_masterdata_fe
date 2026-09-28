@@ -302,6 +302,23 @@ sap.ui.define([
                 this._oPricingDialog.close();
             },
 
+            onEdit: function (oEvent) {
+
+                const oContext =
+                    oEvent.getSource().getBindingContext();
+
+                const oData =
+                    oContext.getObject();
+
+                this._isEditMode = true;
+                this._oEditContext = oContext;
+
+                this._openPricingDialog(
+                    "Edit Pricing Component",
+                    oData
+                );
+            },
+
             onSave: async function () {
 
                 const oModel = this.getView().getModel();
@@ -423,6 +440,49 @@ sap.ui.define([
                         "Failed to save Pricing Component."
                     );
                 }
+            },
+
+            onDelete: function (oEvent) {
+
+                const oContext =
+                    oEvent.getSource().getBindingContext();
+
+                const sRegionCode =
+                    oContext.getProperty("regionCode");
+
+                const sEngineType =
+                    oContext.getProperty("engineType");
+
+                MessageBox.confirm(
+                    `Delete ${sRegionCode} - ${sEngineType}?`,
+                    {
+                        title: "Confirm Delete",
+
+                        onClose: async (sAction) => {
+
+                            if (sAction !== MessageBox.Action.OK) {
+                                return;
+                            }
+
+                            try {
+
+                                await oContext.delete();
+
+                                MessageToast.show(
+                                    "Pricing Component deleted successfully"
+                                );
+
+                            } catch (oError) {
+
+                                console.error(oError);
+
+                                MessageBox.error(
+                                    "Failed to delete Pricing Component."
+                                );
+                            }
+                        }
+                    }
+                );
             },
 
             _getNumber: function (oInput) {

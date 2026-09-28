@@ -3,16 +3,76 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m">
 
-    <Page
-        title="MTO Configuration Master"
-        showNavButton="true"
-        navButtonPress=".onNavBack">
+    <Page title="MTO Configurations">
+
+        <headerContent>
+            <Button
+                text="Add MTO Configuration"
+                type="Emphasized"
+                press=".onAdd" />
+        </headerContent>
 
         <content>
 
-            <Title
-                text="MTO Configuration Master"
-                class="sapUiMediumMargin"/>
+            <Table
+                id="mtoConfigurationsTable"
+                items="{/MTOConfigurations}"
+                growing="true"
+                growingThreshold="20">
+
+                <columns>
+
+                    <Column>
+                        <Text text="MTO Model Code" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Valid From" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Reference MTS Model" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Actions" />
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{mtoModelCode}" />
+
+                            <Text text="{validFrom}" />
+
+                            <Text text="{referenceMTSModel_modelCode}" />
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    press=".onEdit" />
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    press=".onDelete" />
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
 
         </content>
 

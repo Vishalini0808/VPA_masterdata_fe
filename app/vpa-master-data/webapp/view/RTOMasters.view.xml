@@ -6,13 +6,127 @@
     <Page
         title="RTO Masters"
         showNavButton="true"
-        navButtonPress=".onNavBack">
+        navButtonPress="onNavBack">
+
+        <headerContent>
+            <Button
+                text="Add RTO Master"
+                icon="sap-icon://add"
+                type="Emphasized"
+                press="onAdd" />
+        </headerContent>
 
         <content>
 
-            <Title
-                text="RTO Master"
-                class="sapUiMediumMargin"/>
+            <Table
+                id="rtoMastersTable"
+                items="{/RTOMasters}"
+                growing="true"
+                growingThreshold="20">
+
+                <columns>
+
+                    <Column>
+                        <Text text="Region" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Valid From" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Slab" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Engine Type" />
+                    </Column>
+
+                    <Column>
+                        <Text text="CC Min" />
+                    </Column>
+
+                    <Column>
+                        <Text text="CC Max" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Minimum Price" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Maximum Price" />
+                    </Column>
+
+                    <Column>
+                        <Text text="RTO %" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Flat Price" />
+                    </Column>
+
+                    <Column>
+                        <Text text="Approval Status" />
+                    </Column>
+
+                    <Column width="8rem">
+                        <Text text="Actions" />
+                    </Column>
+
+                </columns>
+
+                <items>
+
+                    <ColumnListItem>
+
+                        <cells>
+
+                            <Text text="{region_regionCode}" />
+
+                            <Text text="{validFrom}" />
+
+                            <Text text="{slab}" />
+
+                            <Text text="{engineType}" />
+
+                            <Text text="{ccMin}" />
+
+                            <Text text="{ccMax}" />
+
+                            <Text text="{minimumPrice}" />
+
+                            <Text text="{maximumPrice}" />
+
+                            <Text text="{rtoPercent}" />
+
+                            <Text text="{flatPriceValue}" />
+
+                            <Text text="{approvalStatus}" />
+
+                            <HBox>
+
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="Edit"
+                                    press="onEdit" />
+
+                                <Button
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    tooltip="Delete"
+                                    press="onDelete" />
+
+                            </HBox>
+
+                        </cells>
+
+                    </ColumnListItem>
+
+                </items>
+
+            </Table>
 
         </content>
 
