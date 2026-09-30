@@ -2,26 +2,16 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/layout/form/SimpleForm",
-    "sap/m/Label",
-    "sap/m/Input",
-    "sap/m/Select",
-    "sap/m/DatePicker",
-    "sap/ui/core/Item",
-    "sap/m/Dialog",
-    "sap/m/Button"
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType"
 ], function (
     Controller,
     MessageToast,
     MessageBox,
-    SimpleForm,
-    Label,
-    Input,
-    Select,
-    DatePicker,
-    Item,
-    Dialog,
-    Button
+    Filter,
+    FilterOperator,
+    FilterType
 ) {
 
     "use strict";
@@ -30,15 +20,138 @@ sap.ui.define([
         "vpamasterdata.controller.Models",
         {
 
-            // =====================================================
-            // NAVIGATION
-            // =====================================================
+
+            onInit: function () {
+
+                this._isEditMode = false;
+                this._oEditContext = null;
+
+                // this._loadFilterValues();
+
+
+            },
+
 
             onNavBack: function () {
 
                 this.getOwnerComponent()
                     .getRouter()
                     .navTo("RouteView1");
+            },
+
+
+
+            onGoFilter: function () {
+
+                const oTable = this.byId("modelTable");
+                const oBinding = oTable.getBinding("items");
+
+                const aFilters = [];
+
+                // Model Code
+                const sModelCode =
+                    this.byId("modelCodeFilter").getSelectedKey();
+
+                console.log("Selected Model Code:", sModelCode);
+
+
+                if (sModelCode) {
+
+                    aFilters.push(
+                        new Filter(
+                            "modelCode",
+                            FilterOperator.EQ,
+                            sModelCode
+                        )
+                    );
+                }
+
+
+                // Model Description
+                const sDescription =
+                    this.byId("modelDescriptionFilter").getSelectedKey();
+
+                console.log("Selected Description:", sDescription);
+
+
+                if (sDescription) {
+
+                    aFilters.push(
+                        new Filter(
+                            "modelDescription",
+                            FilterOperator.EQ,
+                            sDescription
+                        )
+                    );
+                }
+
+
+                // Order Type
+                const sOrderType =
+                    this.byId("orderTypeFilter").getSelectedKey();
+
+                console.log("Selected Order Type:", sOrderType);
+
+
+                if (sOrderType) {
+
+                    aFilters.push(
+                        new Filter(
+                            "orderType",
+                            FilterOperator.EQ,
+                            sOrderType
+                        )
+                    );
+                }
+
+
+                console.log("Filters:", aFilters);
+
+
+                // Apply filters
+                oBinding.filter(
+                    aFilters,
+                    FilterType.Application
+                );
+            },
+
+
+            // =====================================================
+            // CLEAR FILTER
+            // =====================================================
+
+            onClearFilter: function () {
+
+                this.byId("modelCodeFilter")
+                    .setSelectedKey("");
+
+                this.byId("modelDescriptionFilter")
+                    .setSelectedKey("");
+
+                this.byId("orderTypeFilter")
+                    .setSelectedKey("");
+
+
+                const oBinding =
+                    this.byId("modelTable")
+                        .getBinding("items");
+
+
+                oBinding.filter(
+                    [],
+                    FilterType.Application
+                );
+            },
+
+            // =====================================================
+            // ADAPT FILTERS
+            // =====================================================
+
+            onAdaptFilters: function () {
+
+                MessageToast.show(
+                    "Adapt Filters can be configured here."
+                );
 
             },
 
@@ -52,25 +165,68 @@ sap.ui.define([
                 this._isEditMode = false;
                 this._oEditContext = null;
 
-                this._openModelDialog("Add Model");
 
-                this._oModelCodeInput.setEnabled(true);
+                const oDialog =
+                    this.byId("modelDialog");
 
-                this._oModelCodeInput.setValue("");
-                this._oValidFromInput.setValue("");
-                this._oOrderTypeInput.setSelectedKey("MTS");
-                this._oDescriptionInput.setValue("");
-                this._oEngineTypeInput.setSelectedKey("Petrol");
 
-                this._oCCWattInput.setValue("");
-                this._oGSTInput.setValue("");
-                this._oDealerMarginInput.setValue("");
-                this._oCsdDiscountInput.setValue("");
-                this._oCsdGstInput.setValue("");
-                this._oGemValueInput.setValue("");
+                oDialog.setTitle(
+                    "Add Model"
+                );
 
-                this._oStatusInput.setSelectedKey("ACTIVE");
-                this._oApprovalStatusInput.setSelectedKey("DRAFT");
+
+                // ---------------------------------------------
+                // RESET FIELDS
+                // ---------------------------------------------
+
+                this.byId("modelCodeInput")
+                    .setValue("");
+
+                this.byId("validFromInput")
+                    .setValue("");
+
+                this.byId("orderTypeInput")
+                    .setSelectedKey("MTS");
+
+                this.byId("modelDescriptionInput")
+                    .setValue("");
+
+                this.byId("engineTypeInput")
+                    .setSelectedKey("Petrol");
+
+                this.byId("ccWattInput")
+                    .setValue("");
+
+                this.byId("gstPercentInput")
+                    .setValue("");
+
+                this.byId("dealerMarginPercentInput")
+                    .setValue("");
+
+                this.byId("csdDiscountPercentInput")
+                    .setValue("");
+
+                this.byId("csdGstPercentInput")
+                    .setValue("");
+
+                this.byId("gemValueInput")
+                    .setValue("");
+
+                this.byId("statusInput")
+                    .setSelectedKey("ACTIVE");
+
+                this.byId("approvalStatusInput")
+                    .setSelectedKey("DRAFT");
+
+
+                // Model Code editable during create
+
+                this.byId("modelCodeInput")
+                    .setEnabled(true);
+
+
+                oDialog.open();
+
             },
 
 
@@ -81,21 +237,116 @@ sap.ui.define([
             onEdit: function (oEvent) {
 
                 const oContext =
-                    oEvent.getSource().getBindingContext();
+                    oEvent
+                        .getSource()
+                        .getBindingContext();
+
 
                 if (!oContext) {
-                    MessageBox.error("Unable to get selected model.");
+
+                    MessageBox.error(
+                        "Unable to get selected model."
+                    );
+
                     return;
                 }
+
 
                 this._isEditMode = true;
                 this._oEditContext = oContext;
 
-                const oData = oContext.getObject();
 
-                this._openModelDialog("Edit Model", oData);
+                const oData =
+                    oContext.getObject();
 
-                this._oModelCodeInput.setEnabled(false);
+
+                const oDialog =
+                    this.byId("modelDialog");
+
+
+                oDialog.setTitle(
+                    "Edit Model"
+                );
+
+
+                // ---------------------------------------------
+                // LOAD DATA
+                // ---------------------------------------------
+
+                this.byId("modelCodeInput")
+                    .setValue(
+                        oData.modelCode || ""
+                    );
+
+                this.byId("validFromInput")
+                    .setValue(
+                        oData.validFrom || ""
+                    );
+
+                this.byId("orderTypeInput")
+                    .setSelectedKey(
+                        oData.orderType || "MTS"
+                    );
+
+                this.byId("modelDescriptionInput")
+                    .setValue(
+                        oData.modelDescription || ""
+                    );
+
+                this.byId("engineTypeInput")
+                    .setSelectedKey(
+                        oData.engineType || "Petrol"
+                    );
+
+                this.byId("ccWattInput")
+                    .setValue(
+                        oData.ccWatt ?? ""
+                    );
+
+                this.byId("gstPercentInput")
+                    .setValue(
+                        oData.gstPercent ?? ""
+                    );
+
+                this.byId("dealerMarginPercentInput")
+                    .setValue(
+                        oData.dealerMarginPercent ?? ""
+                    );
+
+                this.byId("csdDiscountPercentInput")
+                    .setValue(
+                        oData.csdDiscountPercent ?? ""
+                    );
+
+                this.byId("csdGstPercentInput")
+                    .setValue(
+                        oData.csdGstPercent ?? ""
+                    );
+
+                this.byId("gemValueInput")
+                    .setValue(
+                        oData.gemValue ?? ""
+                    );
+
+                this.byId("statusInput")
+                    .setSelectedKey(
+                        oData.status || "ACTIVE"
+                    );
+
+                this.byId("approvalStatusInput")
+                    .setSelectedKey(
+                        oData.approvalStatus || "DRAFT"
+                    );
+
+
+                // Model Code should not be changed during edit
+
+                this.byId("modelCodeInput")
+                    .setEnabled(false);
+
+
+                oDialog.open();
+
             },
 
 
@@ -105,344 +356,9 @@ sap.ui.define([
 
             onCancel: function () {
 
-                if (this._oModelDialog) {
-                    this._oModelDialog.close();
-                }
+                this.byId("modelDialog")
+                    .close();
 
-            },
-
-
-            // =====================================================
-            // CREATE DIALOG
-            // =====================================================
-
-            _openModelDialog: function (sTitle, oData) {
-
-                if (!this._oModelDialog) {
-
-                    // ==========================================
-                    // CONTROLS
-                    // ==========================================
-
-                    this._oModelCodeInput = new Input({
-                        placeholder: "Enter model code",
-                        width: "100%"
-                    });
-
-                    this._oValidFromInput = new DatePicker({
-                        valueFormat: "yyyy-MM-dd",
-                        displayFormat: "dd-MM-yyyy",
-                        placeholder: "Select date",
-                        width: "100%"
-                    });
-
-                    this._oOrderTypeInput = new Select({
-                        width: "100%",
-                        items: [
-                            new Item({
-                                key: "MTS",
-                                text: "MTS"
-                            }),
-                            new Item({
-                                key: "MTO",
-                                text: "MTO"
-                            })
-                        ]
-                    });
-
-                    this._oDescriptionInput = new Input({
-                        placeholder: "Enter model description",
-                        width: "100%"
-                    });
-
-                    this._oEngineTypeInput = new Select({
-                        width: "100%",
-                        items: [
-                            new Item({
-                                key: "Petrol",
-                                text: "Petrol"
-                            }),
-                            new Item({
-                                key: "EV",
-                                text: "EV"
-                            })
-                        ]
-                    });
-
-                    this._oCCWattInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter CC / Watt",
-                        width: "100%"
-                    });
-
-                    this._oGSTInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter GST %",
-                        width: "100%"
-                    });
-
-                    this._oDealerMarginInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter dealer margin %",
-                        width: "100%"
-                    });
-
-                    this._oCsdDiscountInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter CSD discount %",
-                        width: "100%"
-                    });
-
-                    this._oCsdGstInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter CSD GST %",
-                        width: "100%"
-                    });
-
-                    this._oGemValueInput = new Input({
-                        type: "Number",
-                        placeholder: "Enter GeM value",
-                        width: "100%"
-                    });
-
-                    this._oStatusInput = new Select({
-                        width: "100%",
-                        items: [
-                            new Item({
-                                key: "ACTIVE",
-                                text: "ACTIVE"
-                            }),
-                            new Item({
-                                key: "INACTIVE",
-                                text: "INACTIVE"
-                            })
-                        ]
-                    });
-
-                    this._oApprovalStatusInput = new Select({
-                        width: "100%",
-                        items: [
-                            new Item({
-                                key: "DRAFT",
-                                text: "DRAFT"
-                            }),
-                            new Item({
-                                key: "SUBMITTED",
-                                text: "SUBMITTED"
-                            }),
-                            new Item({
-                                key: "APPROVED",
-                                text: "APPROVED"
-                            }),
-                            new Item({
-                                key: "REJECTED",
-                                text: "REJECTED"
-                            })
-                        ]
-                    });
-
-
-                    // ==========================================
-                    // FORM
-                    // ==========================================
-
-                    const oForm = new SimpleForm({
-
-                        editable: true,
-
-                        layout: "ResponsiveGridLayout",
-
-                        labelSpanXL: 4,
-                        labelSpanL: 4,
-                        labelSpanM: 4,
-                        labelSpanS: 12,
-
-                        emptySpanXL: 1,
-                        emptySpanL: 1,
-                        emptySpanM: 1,
-                        emptySpanS: 0,
-
-                        columnsXL: 2,
-                        columnsL: 2,
-                        columnsM: 1,
-
-                        content: [
-
-                            new Label({
-                                text: "Model Code",
-                                required: true
-                            }),
-                            this._oModelCodeInput,
-
-                            new Label({
-                                text: "Valid From"
-                            }),
-                            this._oValidFromInput,
-
-                            new Label({
-                                text: "Order Type",
-                                required: true
-                            }),
-                            this._oOrderTypeInput,
-
-                            new Label({
-                                text: "Model Description"
-                            }),
-                            this._oDescriptionInput,
-
-                            new Label({
-                                text: "Engine Type",
-                                required: true
-                            }),
-                            this._oEngineTypeInput,
-
-                            new Label({
-                                text: "CC / Watt"
-                            }),
-                            this._oCCWattInput,
-
-                            new Label({
-                                text: "GST %"
-                            }),
-                            this._oGSTInput,
-
-                            new Label({
-                                text: "Dealer Margin %"
-                            }),
-                            this._oDealerMarginInput,
-
-                            new Label({
-                                text: "CSD Discount %"
-                            }),
-                            this._oCsdDiscountInput,
-
-                            new Label({
-                                text: "CSD GST %"
-                            }),
-                            this._oCsdGstInput,
-
-                            new Label({
-                                text: "GeM Value"
-                            }),
-                            this._oGemValueInput,
-
-                            new Label({
-                                text: "Status"
-                            }),
-                            this._oStatusInput,
-
-                            new Label({
-                                text: "Approval Status"
-                            }),
-                            this._oApprovalStatusInput
-                        ]
-                    });
-
-
-                    // ==========================================
-                    // DIALOG
-                    // ==========================================
-
-                    this._oModelDialog = new Dialog({
-
-                        title: sTitle,
-
-                        contentWidth: "800px",
-
-                        draggable: true,
-                        resizable: true,
-
-                        content: [
-                            oForm
-                        ],
-
-                        beginButton: new Button({
-                            text: "Save",
-                            type: "Emphasized",
-                            press: this.onSave.bind(this)
-                        }),
-
-                        endButton: new Button({
-                            text: "Cancel",
-                            press: this.onCancel.bind(this)
-                        })
-
-                    });
-
-                    this.getView().addDependent(
-                        this._oModelDialog
-                    );
-                }
-
-
-                // ==========================================
-                // TITLE
-                // ==========================================
-
-                this._oModelDialog.setTitle(sTitle);
-
-
-                // ==========================================
-                // LOAD DATA FOR EDIT
-                // ==========================================
-
-                if (oData) {
-
-                    this._oModelCodeInput.setValue(
-                        oData.modelCode || ""
-                    );
-
-                    this._oValidFromInput.setValue(
-                        oData.validFrom || ""
-                    );
-
-                    this._oOrderTypeInput.setSelectedKey(
-                        oData.orderType || "MTS"
-                    );
-
-                    this._oDescriptionInput.setValue(
-                        oData.modelDescription || ""
-                    );
-
-                    this._oEngineTypeInput.setSelectedKey(
-                        oData.engineType || "Petrol"
-                    );
-
-                    this._oCCWattInput.setValue(
-                        oData.ccWatt ?? ""
-                    );
-
-                    this._oGSTInput.setValue(
-                        oData.gstPercent ?? ""
-                    );
-
-                    this._oDealerMarginInput.setValue(
-                        oData.dealerMarginPercent ?? ""
-                    );
-
-                    this._oCsdDiscountInput.setValue(
-                        oData.csdDiscountPercent ?? ""
-                    );
-
-                    this._oCsdGstInput.setValue(
-                        oData.csdGstPercent ?? ""
-                    );
-
-                    this._oGemValueInput.setValue(
-                        oData.gemValue ?? ""
-                    );
-
-                    this._oStatusInput.setSelectedKey(
-                        oData.status || "ACTIVE"
-                    );
-
-                    this._oApprovalStatusInput.setSelectedKey(
-                        oData.approvalStatus || "DRAFT"
-                    );
-                }
-
-
-                this._oModelDialog.open();
             },
 
 
@@ -452,81 +368,108 @@ sap.ui.define([
 
             onSave: async function () {
 
-                const oModel = this.getView().getModel();
+                const oModel =
+                    this.getView().getModel();
+
 
                 try {
 
-                    // ==========================================
+                    // ---------------------------------------------
                     // READ VALUES
-                    // ==========================================
+                    // ---------------------------------------------
 
                     const sModelCode =
-                        this._oModelCodeInput
+                        this.byId("modelCodeInput")
                             .getValue()
                             .trim();
 
                     const sValidFrom =
-                        this._oValidFromInput.getValue();
+                        this.byId("validFromInput")
+                            .getValue();
 
                     const sOrderType =
-                        this._oOrderTypeInput.getSelectedKey();
+                        this.byId("orderTypeInput")
+                            .getSelectedKey();
 
                     const sDescription =
-                        this._oDescriptionInput
+                        this.byId("modelDescriptionInput")
                             .getValue()
                             .trim();
 
                     const sEngineType =
-                        this._oEngineTypeInput.getSelectedKey();
+                        this.byId("engineTypeInput")
+                            .getSelectedKey();
 
                     const sCCWatt =
-                        this._oCCWattInput.getValue();
+                        this.byId("ccWattInput")
+                            .getValue();
 
                     const sGST =
-                        this._oGSTInput.getValue();
+                        this.byId("gstPercentInput")
+                            .getValue();
 
                     const sDealerMargin =
-                        this._oDealerMarginInput.getValue();
+                        this.byId("dealerMarginPercentInput")
+                            .getValue();
 
                     const sCsdDiscount =
-                        this._oCsdDiscountInput.getValue();
+                        this.byId("csdDiscountPercentInput")
+                            .getValue();
 
                     const sCsdGst =
-                        this._oCsdGstInput.getValue();
+                        this.byId("csdGstPercentInput")
+                            .getValue();
 
                     const sGemValue =
-                        this._oGemValueInput.getValue();
+                        this.byId("gemValueInput")
+                            .getValue();
 
                     const sStatus =
-                        this._oStatusInput.getSelectedKey();
+                        this.byId("statusInput")
+                            .getSelectedKey();
 
                     const sApprovalStatus =
-                        this._oApprovalStatusInput.getSelectedKey();
+                        this.byId("approvalStatusInput")
+                            .getSelectedKey();
 
 
-                    // ==========================================
+                    // ---------------------------------------------
                     // VALIDATION
-                    // ==========================================
+                    // ---------------------------------------------
 
                     if (!sModelCode) {
-                        MessageBox.error("Model Code is required.");
+
+                        MessageBox.error(
+                            "Model Code is required."
+                        );
+
                         return;
                     }
+
 
                     if (!sOrderType) {
-                        MessageBox.error("Order Type is required.");
+
+                        MessageBox.error(
+                            "Order Type is required."
+                        );
+
                         return;
                     }
+
 
                     if (!sEngineType) {
-                        MessageBox.error("Engine Type is required.");
+
+                        MessageBox.error(
+                            "Engine Type is required."
+                        );
+
                         return;
                     }
 
 
-                    // ==========================================
+                    // ---------------------------------------------
                     // PAYLOAD
-                    // ==========================================
+                    // ---------------------------------------------
 
                     const oPayload = {
 
@@ -580,41 +523,44 @@ sap.ui.define([
                     };
 
 
-                    console.log(
-                        "MODEL PAYLOAD:",
-                        oPayload
-                    );
-
-
-                    // ==========================================
+                    // =================================================
                     // EDIT
-                    // ==========================================
+                    // =================================================
 
                     if (
                         this._isEditMode &&
                         this._oEditContext
                     ) {
 
-                        Object.keys(oPayload).forEach(
-                            function (sProperty) {
+                        const aProperties =
+                            Object.keys(oPayload);
 
-                                this._oEditContext.setProperty(
-                                    sProperty,
-                                    oPayload[sProperty]
-                                );
 
-                            }.bind(this)
+                        await Promise.all(
+                            aProperties.map(
+                                function (sProperty) {
+
+                                    return this._oEditContext
+                                        .setProperty(
+                                            sProperty,
+                                            oPayload[sProperty]
+                                        );
+
+                                }.bind(this)
+                            )
                         );
+
 
                         MessageToast.show(
-                            "Model updated successfully"
+                            "Model updated successfully."
                         );
+
                     }
 
 
-                    // ==========================================
+                    // =================================================
                     // CREATE
-                    // ==========================================
+                    // =================================================
 
                     else {
 
@@ -627,14 +573,10 @@ sap.ui.define([
                         };
 
 
-                        console.log(
-                            "CREATE PAYLOAD:",
-                            oCreatePayload
-                        );
-
-
                         const oListBinding =
-                            oModel.bindList("/Models");
+                            oModel.bindList(
+                                "/Models"
+                            );
 
 
                         const oContext =
@@ -647,12 +589,26 @@ sap.ui.define([
 
 
                         MessageToast.show(
-                            "Model created successfully"
+                            "Model created successfully."
                         );
+
                     }
 
 
-                    this._oModelDialog.close();
+                    // ---------------------------------------------
+                    // CLOSE
+                    // ---------------------------------------------
+
+                    this.byId("modelDialog")
+                        .close();
+
+
+                    // ---------------------------------------------
+                    // RESET EDIT STATE
+                    // ---------------------------------------------
+
+                    this._isEditMode = false;
+                    this._oEditContext = null;
 
                 }
                 catch (oError) {
@@ -662,11 +618,14 @@ sap.ui.define([
                         oError
                     );
 
+
                     MessageBox.error(
                         oError.message ||
                         "Failed to save model."
                     );
+
                 }
+
             },
 
 
@@ -708,47 +667,78 @@ sap.ui.define([
 
                         title: "Delete Model",
 
-                        onClose:
-                            async function (sAction) {
+                        onClose: async function (sAction) {
 
-                                if (
-                                    sAction !==
-                                    MessageBox.Action.OK
-                                ) {
-                                    return;
-                                }
-
-
-                                try {
-
-                                    await oContext.delete();
+                            if (
+                                sAction !==
+                                MessageBox.Action.OK
+                            ) {
+                                return;
+                            }
 
 
-                                    MessageToast.show(
-                                        "Model deleted successfully"
-                                    );
+                            try {
 
-                                }
-                                catch (oError) {
-
-                                    console.error(
-                                        "DELETE ERROR:",
-                                        oError
-                                    );
+                                await oContext.delete();
 
 
-                                    MessageBox.error(
-                                        oError.message ||
-                                        "Failed to delete model."
-                                    );
-
-                                }
+                                MessageToast.show(
+                                    "Model deleted successfully."
+                                );
 
                             }
+                            catch (oError) {
+
+                                console.error(
+                                    "DELETE ERROR:",
+                                    oError
+                                );
+
+
+                                MessageBox.error(
+                                    oError.message ||
+                                    "Failed to delete model."
+                                );
+
+                            }
+
+                        }
 
                     }
 
                 );
+
+            },
+
+
+            // =====================================================
+            // VIEW DETAILS
+            // =====================================================
+
+            onView: function (oEvent) {
+
+                const oContext =
+                    oEvent
+                        .getSource()
+                        .getBindingContext();
+
+
+                if (!oContext) {
+                    return;
+                }
+
+
+                const oData =
+                    oContext.getObject();
+
+
+                MessageToast.show(
+                    "Selected Model: " +
+                    oData.modelCode
+                );
+
+                // Later you can navigate to a Model
+                // Object Page from here.
 
             }
 

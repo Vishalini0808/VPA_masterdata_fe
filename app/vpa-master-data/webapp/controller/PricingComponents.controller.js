@@ -9,7 +9,10 @@ sap.ui.define([
     "sap/m/Label",
     "sap/ui/layout/form/SimpleForm",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
+    "sap/m/MessageBox",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType"
 ], function (
     Controller,
     Dialog,
@@ -21,7 +24,10 @@ sap.ui.define([
     Label,
     SimpleForm,
     MessageToast,
-    MessageBox
+    MessageBox,
+    Filter,
+    FilterOperator,
+    FilterType
 ) {
     "use strict";
 
@@ -41,6 +47,71 @@ sap.ui.define([
                 this._oEditContext = null;
 
                 this._openPricingDialog("Add Pricing Component");
+            },
+
+
+            onGoFilter: function () {
+
+                const oTable = this.byId("pricingComponentsTable");
+                const oBinding = oTable.getBinding("items");
+
+                const aFilters = [];
+
+                const sRegionCode =
+                    this.byId("regionCodeFilterPC").getSelectedKey();
+
+                const sEngineType =
+                    this.byId("engineTypeFilterPC").getSelectedKey();
+
+                const sApprovalStatus =
+                    this.byId("approvalStatusFilterPC").getSelectedKey();
+
+
+                if (sRegionCode) {
+                    aFilters.push(
+                        new Filter(
+                            "regionCode",
+                            FilterOperator.EQ,
+                            sRegionCode
+                        )
+                    );
+                }
+
+                if (sEngineType) {
+                    aFilters.push(
+                        new Filter(
+                            "engineType",
+                            FilterOperator.EQ,
+                            sEngineType
+                        )
+                    );
+                }
+
+                if (sApprovalStatus) {
+                    aFilters.push(
+                        new Filter(
+                            "approvalStatus",
+                            FilterOperator.EQ,
+                            sApprovalStatus
+                        )
+                    );
+                }
+
+                oBinding.filter(
+                    aFilters,
+                    FilterType.Application
+                );
+            },
+
+            onClearFilter: function () {
+
+                this.byId("regionCodeFilterPC").setSelectedKey("");
+                this.byId("engineTypeFilterPC").setSelectedKey("");
+                this.byId("approvalStatusFilterPC").setSelectedKey("");
+
+                this.byId("pricingComponentsTable")
+                    .getBinding("items")
+                    .filter([], FilterType.Application);
             },
 
             _openPricingDialog: function (sTitle, oData) {

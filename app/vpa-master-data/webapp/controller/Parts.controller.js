@@ -7,7 +7,10 @@ sap.ui.define([
     "sap/ui/layout/form/SimpleForm",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/m/DatePicker"
+    "sap/m/DatePicker",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType"
 ], function (
     Controller,
     Dialog,
@@ -17,7 +20,11 @@ sap.ui.define([
     SimpleForm,
     MessageToast,
     MessageBox,
-    DatePicker
+    DatePicker,
+    Filter,
+    FilterOperator,
+    FilterType
+
 ) {
 
     "use strict";
@@ -52,6 +59,69 @@ sap.ui.define([
 
                 this._openPartDialog("Edit Part", oData);
             },
+
+
+            onGoFilter: function () {
+
+    const oTable = this.byId("partsTable");
+    const oBinding = oTable.getBinding("items");
+
+    const aFilters = [];
+
+    const sPartCode =
+        this.byId("partCodeFilter").getSelectedKey();
+
+    const sDescription =
+        this.byId("partDescriptionFilter").getSelectedKey();
+
+
+    if (sPartCode) {
+
+        aFilters.push(
+            new Filter(
+                "partCode",
+                FilterOperator.EQ,
+                sPartCode
+            )
+        );
+
+    }
+
+
+    if (sDescription) {
+
+        aFilters.push(
+            new Filter(
+                "description",
+                FilterOperator.EQ,
+                sDescription
+            )
+        );
+
+    }
+
+
+    oBinding.filter(
+        aFilters,
+        FilterType.Application
+    );
+},
+
+
+onClearFilter: function () {
+
+    this.byId("partCodeFilter").setSelectedKey("");
+
+    this.byId("partDescriptionFilter").setSelectedKey("");
+
+
+    this.byId("partsTable")
+        .getBinding("items")
+        .filter(
+            [],
+            FilterType.Application
+        );
+},
 
             _openPartDialog: function (sTitle, oData) {
 

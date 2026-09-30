@@ -1,24 +1,115 @@
 <mvc:View
     controllerName="vpamasterdata.controller.Parts"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
 
-    <Page title="Parts">
+    <Page
+        title="Parts"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <!-- Header -->
 
         <headerContent>
+
             <Button
-                text="Add Part"
+                text="Create"
+                icon="sap-icon://add"
                 type="Emphasized"
                 press=".onAdd" />
+
         </headerContent>
 
+
         <content>
+
+            <!-- Filter Area -->
+
+            <VBox class="sapUiSmallMargin">
+
+                <HBox
+                    width="100%"
+                    alignItems="End">
+
+                    <!-- Part Code -->
+
+                    <VBox
+                        width="25%"
+                        class="sapUiSmallMarginEnd">
+
+                        <Label text="Part Code" />
+
+                        <ComboBox
+                            id="partCodeFilter"
+                            width="100%"
+                            placeholder="Select Part Code"
+                            items="{/Parts}">
+
+                            <core:Item
+                                key="{partCode}"
+                                text="{partCode}" />
+
+                        </ComboBox>
+
+                    </VBox>
+
+
+                    <!-- Part Description -->
+
+                    <VBox
+                        width="30%"
+                        class="sapUiSmallMarginEnd">
+
+                        <Label text="Part Description" />
+
+                        <ComboBox
+                            id="partDescriptionFilter"
+                            width="100%"
+                            placeholder="Select Part Description"
+                            items="{/Parts}">
+
+                            <core:Item
+                                key="{description}"
+                                text="{description}" />
+
+                        </ComboBox>
+
+                    </VBox>
+
+
+                    <!-- Filter Buttons -->
+
+                    <HBox>
+
+                        <Button
+                            text="Go"
+                            type="Emphasized"
+                            icon="sap-icon://search"
+                            press=".onGoFilter"
+                            class="sapUiTinyMarginEnd" />
+
+                        <Button
+                            text="Clear"
+                            icon="sap-icon://clear-filter"
+                            press=".onClearFilter" />
+
+                    </HBox>
+
+                </HBox>
+
+            </VBox>
+
+
+            <!-- Parts Table -->
 
             <Table
                 id="partsTable"
                 items="{/Parts}"
                 growing="true"
                 growingThreshold="20">
+
+                <!-- Table Columns -->
 
                 <columns>
 
@@ -46,11 +137,18 @@
                         <Text text="Price Indicator" />
                     </Column>
 
-                    <Column>
+                    <Column
+                        width="8rem"
+                        hAlign="Center">
+
                         <Text text="Actions" />
+
                     </Column>
 
                 </columns>
+
+
+                <!-- Table Rows -->
 
                 <items>
 
@@ -58,28 +156,37 @@
 
                         <cells>
 
-                            <Text text="{partCode}" />
+                            <Text
+                                text="{partCode}" />
 
-                            <Text text="{validFrom}" />
+                            <Text
+                                text="{validFrom}" />
 
-                            <Text text="{description}" />
+                            <Text
+                                text="{description}" />
 
-                            <Text text="{miyCost}" />
+                            <Text
+                                text="{miyCost}" />
 
-                            <Text text="{miyMarkup}" />
+                            <Text
+                                text="{miyMarkup}" />
 
-                            <Text text="{priceIndicator}" />
+                            <Text
+                                text="{priceIndicator}" />
 
-                            <HBox>
+                            <HBox
+                                justifyContent="Center">
 
                                 <Button
                                     icon="sap-icon://edit"
                                     type="Transparent"
+                                    tooltip="Edit"
                                     press=".onEdit" />
 
                                 <Button
                                     icon="sap-icon://delete"
                                     type="Transparent"
+                                    tooltip="Delete"
                                     press=".onDelete" />
 
                             </HBox>

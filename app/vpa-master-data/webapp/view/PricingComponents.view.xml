@@ -1,28 +1,175 @@
 <mvc:View
     controllerName="vpamasterdata.controller.PricingComponents"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
 
     <Page
         title="Pricing Components"
         showNavButton="true"
-        navButtonPress="onNavBack">
-
-        <headerContent>
-            <Button
-                text="Add Pricing Component"
-                icon="sap-icon://add"
-                type="Emphasized"
-                press="onAdd" />
-        </headerContent>
+        navButtonPress=".onNavBack">
 
         <content>
+
+            <!-- ================================================= -->
+            <!-- FILTER AREA -->
+            <!-- ================================================= -->
+
+            <VBox>
+
+                <HBox
+                    class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginTop"
+                    justifyContent="SpaceBetween">
+
+                    <!-- Region Code -->
+
+                    <VBox width="31%">
+
+                        <Label text="Region Code"/>
+
+                        <Select
+                            id="regionCodeFilterPC"
+                            width="100%"
+                            forceSelection="false"
+                            items="{/Regions}">
+
+                            <core:Item
+                                key="{regionCode}"
+                                text="{regionCode}"/>
+
+                        </Select>
+
+                    </VBox>
+
+
+                    <!-- Engine Type -->
+
+                    <VBox width="31%">
+
+                        <Label text="Engine Type"/>
+
+                        <Select
+                            id="engineTypeFilterPC"
+                            width="100%"
+                            forceSelection="false"
+                            >
+
+                            <core:Item
+                                key="Petrol"
+                                text="Petrol"/>
+
+                            <core:Item
+                                key="EV"
+                                text="EV"/>
+
+                        </Select>
+
+                    </VBox>
+
+
+                    <!-- Approval Status -->
+
+                    <VBox width="31%">
+
+                        <Label text="Approval Status"/>
+
+                        <Select
+                            id="approvalStatusFilterPC"
+                            width="100%"
+                            forceSelection="false"
+                            >
+
+                            <core:Item
+                                key="DRAFT"
+                                text="DRAFT"/>
+
+                            <core:Item
+                                key="SUBMITTED"
+                                text="SUBMITTED"/>
+
+                            <core:Item
+                                key="APPROVED"
+                                text="APPROVED"/>
+
+                            <core:Item
+                                key="REJECTED"
+                                text="REJECTED"/>
+
+                        </Select>
+
+                    </VBox>
+
+                </HBox>
+
+
+                <!-- ================================================= -->
+                <!-- FILTER BUTTONS -->
+                <!-- ================================================= -->
+
+                <HBox
+                    justifyContent="End"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginTop sapUiSmallMarginBottom">
+
+                    <Button
+                        text="Go"
+                        icon="sap-icon://filter"
+                        type="Emphasized"
+                        press=".onGoFilter"/>
+
+                    <Button
+                        text="Clear"
+                        icon="sap-icon://clear-filter"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onClearFilter"/>
+
+                    <Button
+                        text="Adapt Filters"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onAdaptFilters"/>
+
+                </HBox>
+
+            </VBox>
+
+
+            <!-- ================================================= -->
+            <!-- PRICING COMPONENTS TABLE -->
+            <!-- ================================================= -->
 
             <Table
                 id="pricingComponentsTable"
                 items="{/PricingComponents}"
                 growing="true"
-                growingThreshold="20">
+                growingThreshold="20"
+                mode="MultiSelect"
+                includeItemInSelection="true">
+
+                <headerToolbar>
+
+                    <Toolbar>
+
+                        <Title
+                            text="Pricing Components"
+                            level="H2"/>
+
+                        <ToolbarSpacer/>
+
+                        <Button
+                            text="Create"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press=".onAdd"/>
+
+                    </Toolbar>
+
+                </headerToolbar>
+
+
+                <!-- ================================================= -->
+                <!-- COLUMNS -->
+                <!-- ================================================= -->
 
                 <columns>
 
@@ -51,27 +198,27 @@
                     </Column>
 
                     <Column>
-                        <Text text="Other Expenses Lessthan 500"/>
+                        <Text text="Other Expenses &lt; 500"/>
                     </Column>
 
                     <Column>
-                        <Text text="Other Expenses Greaterthan 500"/>
+                        <Text text="Other Expenses &gt; 500"/>
                     </Column>
 
                     <Column>
-                        <Text text="Insurance Lessthan 350"/>
+                        <Text text="Insurance &lt; 350"/>
                     </Column>
 
                     <Column>
-                        <Text text="Insurance Greaterthan 350"/>
+                        <Text text="Insurance &gt; 350"/>
                     </Column>
 
                     <Column>
-                        <Text text="TPA/PA Lessthan 350"/>
+                        <Text text="TPA/PA &lt; 350"/>
                     </Column>
 
                     <Column>
-                        <Text text="TPA/PA Greaterthan 350"/>
+                        <Text text="TPA/PA &gt; 350"/>
                     </Column>
 
                     <Column>
@@ -82,11 +229,20 @@
                         <Text text="Approval Status"/>
                     </Column>
 
-                    <Column width="10rem">
+                    <Column
+                        width="8rem"
+                        hAlign="Center">
+
                         <Text text="Actions"/>
+
                     </Column>
 
                 </columns>
+
+
+                <!-- ================================================= -->
+                <!-- ROWS -->
+                <!-- ================================================= -->
 
                 <items>
 
@@ -120,21 +276,32 @@
 
                             <Text text="{noPlateCharges}"/>
 
-                            <Text text="{approvalStatus}"/>
+                            <ObjectStatus
+                                text="{approvalStatus}"/>
 
-                            <HBox>
+
+                            <!-- Actions -->
+
+                            <HBox
+                                justifyContent="Center">
 
                                 <Button
                                     icon="sap-icon://edit"
                                     type="Transparent"
                                     tooltip="Edit"
-                                    press="onEdit"/>
+                                    press=".onEdit"/>
 
                                 <Button
                                     icon="sap-icon://delete"
                                     type="Transparent"
                                     tooltip="Delete"
-                                    press="onDelete"/>
+                                    press=".onDelete"/>
+
+                                <Button
+                                    icon="sap-icon://navigation-right-arrow"
+                                    type="Transparent"
+                                    tooltip="View Details"
+                                    press=".onView"/>
 
                             </HBox>
 
