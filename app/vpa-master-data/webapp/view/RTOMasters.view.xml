@@ -166,7 +166,11 @@
                             <Text text="{maximumPrice}"/>
                             <Text text="{rtoPercent}"/>
                             <Text text="{flatPriceValue}"/>
-                            <Text text="{approvalStatus}"/>
+
+                            <!-- APPROVAL STATUS: APPROVED green, SUBMITTED orange, REJECTED red, others grey -->
+                            <ObjectStatus
+                                text="{approvalStatus}"
+                                state="{= ${approvalStatus} === 'APPROVED' ? 'Success' : ${approvalStatus} === 'SUBMITTED' ? 'Warning' : ${approvalStatus} === 'REJECTED' ? 'Error' : 'None'}"/>
 
                             <HBox>
 
