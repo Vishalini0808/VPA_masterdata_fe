@@ -7,7 +7,12 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/m/DatePicker",
-    "sap/ui/layout/form/SimpleForm"
+    "sap/ui/layout/form/SimpleForm",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType",
+    "sap/m/CheckBox",
+    "sap/m/VBox"
 ], function (
     Controller,
     Dialog,
@@ -17,7 +22,12 @@ sap.ui.define([
     MessageToast,
     MessageBox,
     DatePicker,
-    SimpleForm
+    SimpleForm,
+    Filter,
+    FilterOperator,
+    FilterType,
+    CheckBox,
+    VBox
 ) {
 
     "use strict";
@@ -36,6 +46,140 @@ sap.ui.define([
                     .getRouter()
                     .navTo("RouteView1");
 
+            },
+
+
+            // =========================
+            // FILTER (Go)
+            // =========================
+
+            onFilter: function () {
+
+                const aFilters = [];
+
+                const sMTOModelCode =
+                    this.byId("mtoModelCodeFilter").getSelectedKey();
+
+                const sReferenceMTS =
+                    this.byId("mtoReferenceMTSFilter").getSelectedKey();
+
+                const sValidFrom =
+                    this.byId("mtoValidFromFilter").getValue();
+
+                if (sMTOModelCode) {
+                    aFilters.push(new Filter(
+                        "mtoModelCode", FilterOperator.EQ, sMTOModelCode));
+                }
+
+                if (sReferenceMTS) {
+                    aFilters.push(new Filter(
+                        "referenceMTSModel_modelCode",
+                        FilterOperator.EQ, sReferenceMTS));
+                }
+
+                if (sValidFrom) {
+                    aFilters.push(new Filter(
+                        "validFrom", FilterOperator.EQ, sValidFrom));
+                }
+
+                const oBinding =
+                    this.byId("mtoConfigurationsTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter(aFilters, FilterType.Application);
+                }
+
+                MessageToast.show(
+                    aFilters.length === 0
+                        ? "All filters cleared."
+                        : "Filter applied."
+                );
+            },
+
+
+            // =========================
+            // CLEAR FILTERS
+            // =========================
+
+            onClearFilters: function () {
+
+                this.byId("mtoModelCodeFilter").setSelectedKey("");
+                this.byId("mtoReferenceMTSFilter").setSelectedKey("");
+                this.byId("mtoValidFromFilter").setValue("");
+
+                const oBinding =
+                    this.byId("mtoConfigurationsTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter([]);
+                }
+
+                MessageToast.show("Filters cleared.");
+            },
+
+
+            // =========================
+            // ADAPT FILTERS (show / hide filter fields)
+            // =========================
+
+            onAdaptFilters: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.open();
+                    return;
+                }
+
+                const oCodeCB = new CheckBox({ text: "MTO Model Code", selected: true });
+                const oMTSCB = new CheckBox({ text: "Reference MTS Model", selected: true });
+                const oDateCB = new CheckBox({ text: "Valid From", selected: true });
+
+                this._oAdaptFilterDialog = new Dialog({
+
+                    title: "Adapt Filters",
+                    contentWidth: "350px",
+
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Label({ text: "Select filter fields" }),
+                                oCodeCB,
+                                oMTSCB,
+                                oDateCB
+                            ]
+                        })
+                    ],
+
+                    beginButton: new Button({
+                        text: "Apply",
+                        type: "Emphasized",
+                        press: function () {
+
+                            this.byId("mtoModelCodeFilter")
+                                .setVisible(oCodeCB.getSelected());
+
+                            this.byId("mtoReferenceMTSFilter")
+                                .setVisible(oMTSCB.getSelected());
+
+                            this.byId("mtoValidFromFilter")
+                                .setVisible(oDateCB.getSelected());
+
+                            this._oAdaptFilterDialog.close();
+
+                        }.bind(this)
+                    }),
+
+                    endButton: new Button({
+                        text: "Cancel",
+                        press: function () {
+                            this._oAdaptFilterDialog.close();
+                        }.bind(this)
+                    })
+                });
+
+                this.getView().addDependent(this._oAdaptFilterDialog);
+
+                this._oAdaptFilterDialog.open();
             },
 
 
@@ -234,10 +378,6 @@ sap.ui.define([
 
             onSave: async function () {
 
-                const oModel =
-                    this.getView().getModel();
-
-
                 const sMTOModelCode =
                     this._oMTOModelCodeInput
                         .getValue()
@@ -285,20 +425,14 @@ sap.ui.define([
 
                     if (this._isEditMode) {
 
-                        Object.keys(oPayload)
-                            .forEach((sProperty) => {
-
-                                this._oEditContext
-                                    .setProperty(
-                                        sProperty,
-                                        oPayload[sProperty]
-                                    );
-
-                            });
-
-
-                        await this._oEditContext
-                            .requestObject();
+                        await Promise.all(
+                            Object.keys(oPayload).map((sProperty) =>
+                                this._oEditContext.setProperty(
+                                    sProperty,
+                                    oPayload[sProperty]
+                                )
+                            )
+                        );
 
 
                         MessageToast.show(
@@ -315,9 +449,8 @@ sap.ui.define([
                     else {
 
                         const oListBinding =
-                            oModel.bindList(
-                                "/MTOConfigurations"
-                            );
+                            this.byId("mtoConfigurationsTable")
+                                .getBinding("items");
 
 
                         const oContext =
@@ -343,6 +476,8 @@ sap.ui.define([
 
                     this._oMTODialog.close();
 
+                    this._oEditContext = null;
+                    this._isEditMode = false;
 
                 } catch (oError) {
 
@@ -428,9 +563,21 @@ sap.ui.define([
 
                 this._oMTODialog.close();
 
+            },
+
+
+            // =========================
+            // EXIT
+            // =========================
+
+            onExit: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.destroy();
+                    this._oAdaptFilterDialog = null;
+                }
             }
 
         }
     );
-
 });

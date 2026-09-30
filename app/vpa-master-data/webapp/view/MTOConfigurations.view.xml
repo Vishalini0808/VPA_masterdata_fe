@@ -1,43 +1,142 @@
 <mvc:View
     controllerName="vpamasterdata.controller.MTOConfigurations"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
 
-    <Page title="MTO Configurations">
-
-        <headerContent>
-            <Button
-                text="Add MTO Configuration"
-                type="Emphasized"
-                press=".onAdd" />
-        </headerContent>
+    <Page
+        id="mtoConfigurationsPage"
+        title="MTO Configuration"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
 
         <content>
 
+            <!-- ===================================================== -->
+            <!-- FILTER AREA -->
+            <!-- ===================================================== -->
+
+            <VBox class="sapUiSmallMargin">
+
+                <HBox
+                    justifyContent="SpaceBetween"
+                    width="100%">
+
+                    <!-- MTO MODEL CODE -->
+                    <VBox width="30%">
+
+                        <Label text="MTO Model Code"/>
+
+                        <ComboBox
+                            id="mtoModelCodeFilter"
+                            width="100%"
+                            placeholder="Select MTO Model Code"
+                            items="{path: '/MTOConfigurations'}">
+
+                            <core:Item
+                                key="{mtoModelCode}"
+                                text="{mtoModelCode}"/>
+
+                        </ComboBox>
+
+                    </VBox>
+
+                    <!-- REFERENCE MTS MODEL -->
+                    <VBox width="30%">
+
+                        <Label text="Reference MTS Model"/>
+
+                        <ComboBox
+                            id="mtoReferenceMTSFilter"
+                            width="100%"
+                            placeholder="Select Reference MTS Model"
+                            items="{path: '/Models'}">
+
+                            <core:Item
+                                key="{modelCode}"
+                                text="{modelCode}"/>
+
+                        </ComboBox>
+
+                    </VBox>
+
+                    <!-- VALID FROM -->
+                    <VBox width="30%">
+
+                        <Label text="Valid From"/>
+
+                        <DatePicker
+                            id="mtoValidFromFilter"
+                            width="100%"
+                            placeholder="Select Valid From"
+                            valueFormat="yyyy-MM-dd"
+                            displayFormat="dd-MMM-yyyy"/>
+
+                    </VBox>
+
+                </HBox>
+
+                <HBox
+                    justifyContent="End"
+                    class="sapUiSmallMarginTop">
+
+                    <Button
+                        text="Go"
+                        icon="sap-icon://filter"
+                        type="Emphasized"
+                        press=".onFilter"/>
+
+                    <Button
+                        text="Clear"
+                        icon="sap-icon://clear-filter"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onClearFilters"/>
+
+                    <Button
+                        text="Adapt Filters"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onAdaptFilters"/>
+
+                </HBox>
+
+            </VBox>
+
+            <!-- ===================================================== -->
+            <!-- MTO CONFIGURATION TABLE -->
+            <!-- ===================================================== -->
+
             <Table
                 id="mtoConfigurationsTable"
-                items="{/MTOConfigurations}"
+                items="{path: '/MTOConfigurations'}"
                 growing="true"
-                growingThreshold="20">
+                growingThreshold="20"
+                sticky="ColumnHeaders">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+
+                        <Title
+                            text="MTO Configurations"
+                            level="H2"/>
+
+                        <ToolbarSpacer/>
+
+                        <Button
+                            text="Create"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press=".onAdd"/>
+
+                    </OverflowToolbar>
+                </headerToolbar>
 
                 <columns>
-
-                    <Column>
-                        <Text text="MTO Model Code" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Valid From" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Reference MTS Model" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Actions" />
-                    </Column>
-
+                    <Column><Text text="MTO Model Code"/></Column>
+                    <Column><Text text="Valid From"/></Column>
+                    <Column><Text text="Reference MTS Model"/></Column>
+                    <Column width="8rem"><Text text="Actions"/></Column>
                 </columns>
 
                 <items>
@@ -46,23 +145,23 @@
 
                         <cells>
 
-                            <Text text="{mtoModelCode}" />
-
-                            <Text text="{validFrom}" />
-
-                            <Text text="{referenceMTSModel_modelCode}" />
+                            <Text text="{mtoModelCode}"/>
+                            <Text text="{validFrom}"/>
+                            <Text text="{referenceMTSModel_modelCode}"/>
 
                             <HBox>
 
                                 <Button
                                     icon="sap-icon://edit"
                                     type="Transparent"
-                                    press=".onEdit" />
+                                    tooltip="Edit"
+                                    press=".onEdit"/>
 
                                 <Button
                                     icon="sap-icon://delete"
                                     type="Transparent"
-                                    press=".onDelete" />
+                                    tooltip="Delete"
+                                    press=".onDelete"/>
 
                             </HBox>
 
