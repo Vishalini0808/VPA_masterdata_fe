@@ -1,4 +1,3 @@
-
 <mvc:View
     controllerName="vpamasterdata.controller.RTOExpenses"
     xmlns:mvc="sap.ui.core.mvc"
@@ -108,7 +107,7 @@
             </VBox>
 
             <!-- ===================================================== -->
-            <!-- RTO MASTER TABLE -->
+            <!-- RTO EXPENSE TABLE -->
             <!-- ===================================================== -->
 
             <Table
@@ -161,7 +160,11 @@
                             <Text text="{maximumPrice}"/>
                             <Text text="{percentage}"/>
                             <Text text="{fixedAmount}"/>
-                            <Text text="{approvalStatus}"/>
+
+                            <!-- APPROVAL STATUS: APPROVED green, SUBMITTED orange, REJECTED red, others grey -->
+                            <ObjectStatus
+                                text="{approvalStatus}"
+                                state="{= ${approvalStatus} === 'APPROVED' ? 'Success' : ${approvalStatus} === 'SUBMITTED' ? 'Warning' : ${approvalStatus} === 'REJECTED' ? 'Error' : 'None'}"/>
 
                             <HBox>
 
