@@ -9,7 +9,12 @@ sap.ui.define([
     "sap/m/Label",
     "sap/ui/layout/form/SimpleForm",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
+    "sap/m/MessageBox",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType",
+    "sap/m/CheckBox",
+    "sap/m/VBox"
 ], function (
     Controller,
     Dialog,
@@ -21,7 +26,12 @@ sap.ui.define([
     Label,
     SimpleForm,
     MessageToast,
-    MessageBox
+    MessageBox,
+    Filter,
+    FilterOperator,
+    FilterType,
+    CheckBox,
+    VBox
 ) {
     "use strict";
 
@@ -33,6 +43,177 @@ sap.ui.define([
                 this.getOwnerComponent()
                     .getRouter()
                     .navTo("RouteView1");
+            },
+
+
+            /* ---------- Filter bar ---------- */
+
+            // =========================================================
+            // FILTER (Go)
+            // =========================================================
+
+            onFilter: function () {
+
+                const aFilters = [];
+
+                const sRegion =
+                    this.byId("regionFilter").getSelectedKey();
+
+                const sEngineType =
+                    this.byId("engineTypeFilter").getSelectedKey();
+
+                const sApprovalStatus =
+                    this.byId("approvalStatusFilter").getSelectedKey();
+
+                if (sRegion) {
+                    aFilters.push(new Filter(
+                        "region_regionCode", FilterOperator.EQ, sRegion));
+                }
+
+                if (sEngineType) {
+                    aFilters.push(new Filter(
+                        "engineType", FilterOperator.EQ, sEngineType));
+                }
+
+                if (sApprovalStatus) {
+                    aFilters.push(new Filter(
+                        "approvalStatus", FilterOperator.EQ, sApprovalStatus));
+                }
+
+                const oBinding =
+                    this.byId("rtoMastersTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter(aFilters, FilterType.Application);
+                }
+
+                MessageToast.show(
+                    aFilters.length === 0
+                        ? "All filters cleared."
+                        : "Filter applied."
+                );
+            },
+
+            // =========================================================
+            // CLEAR FILTERS
+            // =========================================================
+
+            onClearFilters: function () {
+
+                this.byId("regionFilter").setSelectedKey("");
+                this.byId("engineTypeFilter").setSelectedKey("");
+                this.byId("approvalStatusFilter").setSelectedKey("");
+
+                const oBinding =
+                    this.byId("rtoMastersTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter([]);
+                }
+
+                MessageToast.show("Filters cleared.");
+            },
+
+            // =========================================================
+            // ADAPT FILTERS (show / hide filter fields)
+            // =========================================================
+
+            onAdaptFilters: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.open();
+                    return;
+                }
+
+                const oRegionCB = new CheckBox({ text: "Region", selected: true });
+                const oEngineCB = new CheckBox({ text: "Engine Type", selected: true });
+                const oStatusCB = new CheckBox({ text: "Approval Status", selected: true });
+
+                this._oAdaptFilterDialog = new Dialog({
+
+                    title: "Adapt Filters",
+                    contentWidth: "350px",
+
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Label({ text: "Select filter fields" }),
+                                oRegionCB,
+                                oEngineCB,
+                                oStatusCB
+                            ]
+                        })
+                    ],
+
+                    beginButton: new Button({
+                        text: "Apply",
+                        type: "Emphasized",
+                        press: function () {
+
+                            this.byId("regionFilter")
+                                .setVisible(oRegionCB.getSelected());
+
+                            this.byId("engineTypeFilter")
+                                .setVisible(oEngineCB.getSelected());
+
+                            this.byId("approvalStatusFilter")
+                                .setVisible(oStatusCB.getSelected());
+
+                            this._oAdaptFilterDialog.close();
+
+                        }.bind(this)
+                    }),
+
+                    endButton: new Button({
+                        text: "Cancel",
+                        press: function () {
+                            this._oAdaptFilterDialog.close();
+                        }.bind(this)
+                    })
+                });
+
+                this.getView().addDependent(this._oAdaptFilterDialog);
+
+                this._oAdaptFilterDialog.open();
+            },
+
+            // =========================================================
+            // DELETE
+            // =========================================================
+
+            onDelete: function (oEvent) {
+
+                const oContext =
+                    oEvent.getSource().getBindingContext();
+
+                if (!oContext) {
+                    return;
+                }
+
+                MessageBox.confirm(
+                    "Do you want to delete this RTO Master (" +
+                    oContext.getProperty("region_regionCode") + ", slab " +
+                    oContext.getProperty("slab") + ")?",
+                    {
+                        title: "Delete RTO Master",
+
+                        onClose: async function (sAction) {
+
+                            if (sAction !== MessageBox.Action.OK) {
+                                return;
+                            }
+
+                            try {
+                                await oContext.delete();
+                                MessageToast.show("RTO Master deleted successfully.");
+                            } catch (oError) {
+                                MessageBox.error(
+                                    oError.message || "Failed to delete RTO Master.");
+                            }
+                        }
+                    }
+                );
             },
 
             onAdd: function () {
@@ -222,6 +403,8 @@ sap.ui.define([
 
                 this._oRTODialog.setTitle(sTitle);
 
+                this._oRegionInput.setEditable(!oData);
+
                 if (oData) {
 
                     // Edit mode
@@ -325,7 +508,7 @@ sap.ui.define([
 
                     validFrom: sValidFrom || null,
 
-                    slab: sSlab,
+                    slab: Number(sSlab),
 
                     engineType: sEngineType,
 
@@ -360,26 +543,49 @@ sap.ui.define([
 
                 try {
 
-                    const oListBinding =
-                        oModel.bindList("/RTOMasters");
+                    if (this._isEditMode && this._oEditContext) {
 
-                    const oContext =
-                        oListBinding.create(oPayload);
+                        // ---------- EDIT ----------
+                        const oCtx = this._oEditContext;
 
-                    await oContext.created();
+                        await Promise.all(
+                            Object.keys(oPayload)
+                                .filter((sKey) => sKey !== "region_regionCode")
+                                .map((sKey) =>
+                                    oCtx.setProperty(sKey, oPayload[sKey]))
+                        );
 
-                    MessageToast.show(
-                        "RTO Master created successfully"
-                    );
+                        MessageToast.show(
+                            "RTO Master updated successfully");
+
+                    } else {
+
+                        // ---------- CREATE (on the table's own binding,
+                        // so the new row shows up in the list) ----------
+                        const oListBinding =
+                            this.byId("rtoMastersTable")
+                                .getBinding("items");
+
+                        const oContext =
+                            oListBinding.create(oPayload);
+
+                        await oContext.created();
+
+                        MessageToast.show(
+                            "RTO Master created successfully");
+                    }
 
                     this._oRTODialog.close();
+
+                    this._oEditContext = null;
+                    this._isEditMode = false;
 
                 } catch (oError) {
 
                     console.error(oError);
 
                     MessageBox.error(
-                        "Failed to create RTO Master."
+                        oError.message || "Failed to save RTO Master."
                     );
                 }
             },
@@ -391,6 +597,14 @@ sap.ui.define([
                 return sValue !== ""
                     ? Number(sValue)
                     : null;
+            },
+
+            onExit: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.destroy();
+                    this._oAdaptFilterDialog = null;
+                }
             }
         }
     );

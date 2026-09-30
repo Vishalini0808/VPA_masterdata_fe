@@ -8,7 +8,12 @@ sap.ui.define([
     "sap/m/Label",
     "sap/ui/layout/form/SimpleForm",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
+    "sap/m/MessageBox",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+    "sap/ui/model/FilterType",
+    "sap/m/CheckBox",
+    "sap/m/VBox"
 ], function (
     Controller,
     Dialog,
@@ -19,7 +24,12 @@ sap.ui.define([
     Label,
     SimpleForm,
     MessageToast,
-    MessageBox
+    MessageBox,
+    Filter,
+    FilterOperator,
+    FilterType,
+    CheckBox,
+    VBox
 ) {
     "use strict";
 
@@ -33,6 +43,136 @@ sap.ui.define([
                     .getRouter()
                     .navTo("RouteView1");
 
+            },
+
+            // =========================================================
+            // FILTER (Go)
+            // =========================================================
+
+            onFilter: function () {
+
+                const aFilters = [];
+
+                const sRegion =
+                    this.byId("expRegionFilter").getSelectedKey();
+
+                const sEngineType =
+                    this.byId("expEngineTypeFilter").getSelectedKey();
+
+                const sApprovalStatus =
+                    this.byId("expApprovalStatusFilter").getSelectedKey();
+
+                if (sRegion) {
+                    aFilters.push(new Filter(
+                        "region_regionCode", FilterOperator.EQ, sRegion));
+                }
+
+                if (sEngineType) {
+                    aFilters.push(new Filter(
+                        "engineType", FilterOperator.EQ, sEngineType));
+                }
+
+                if (sApprovalStatus) {
+                    aFilters.push(new Filter(
+                        "approvalStatus", FilterOperator.EQ, sApprovalStatus));
+                }
+
+                const oBinding =
+                    this.byId("rtoExpensesTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter(aFilters, FilterType.Application);
+                }
+
+                MessageToast.show(
+                    aFilters.length === 0
+                        ? "All filters cleared."
+                        : "Filter applied."
+                );
+            },
+
+            // =========================================================
+            // CLEAR FILTERS
+            // =========================================================
+
+            onClearFilters: function () {
+
+                this.byId("expRegionFilter").setSelectedKey("");
+                this.byId("expEngineTypeFilter").setSelectedKey("");
+                this.byId("expApprovalStatusFilter").setSelectedKey("");
+
+                const oBinding =
+                    this.byId("rtoExpensesTable").getBinding("items");
+
+                if (oBinding) {
+                    oBinding.filter([]);
+                }
+
+                MessageToast.show("Filters cleared.");
+            },
+
+            // =========================================================
+            // ADAPT FILTERS (show / hide filter fields)
+            // =========================================================
+
+            onAdaptFilters: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.open();
+                    return;
+                }
+
+                const oRegionCB = new CheckBox({ text: "Region", selected: true });
+                const oEngineCB = new CheckBox({ text: "Engine Type", selected: true });
+                const oStatusCB = new CheckBox({ text: "Approval Status", selected: true });
+
+                this._oAdaptFilterDialog = new Dialog({
+
+                    title: "Adapt Filters",
+                    contentWidth: "350px",
+
+                    content: [
+                        new VBox({
+                            class: "sapUiMediumMargin",
+                            items: [
+                                new Label({ text: "Select filter fields" }),
+                                oRegionCB,
+                                oEngineCB,
+                                oStatusCB
+                            ]
+                        })
+                    ],
+
+                    beginButton: new Button({
+                        text: "Apply",
+                        type: "Emphasized",
+                        press: function () {
+
+                            this.byId("expRegionFilter")
+                                .setVisible(oRegionCB.getSelected());
+
+                            this.byId("expEngineTypeFilter")
+                                .setVisible(oEngineCB.getSelected());
+
+                            this.byId("expApprovalStatusFilter")
+                                .setVisible(oStatusCB.getSelected());
+
+                            this._oAdaptFilterDialog.close();
+
+                        }.bind(this)
+                    }),
+
+                    endButton: new Button({
+                        text: "Cancel",
+                        press: function () {
+                            this._oAdaptFilterDialog.close();
+                        }.bind(this)
+                    })
+                });
+
+                this.getView().addDependent(this._oAdaptFilterDialog);
+
+                this._oAdaptFilterDialog.open();
             },
 
             onAdd: function () {
@@ -162,6 +302,8 @@ sap.ui.define([
                     );
                 }
 
+                this._oRegionInput.setEditable(!oData);
+
                 this._oExpenseDialog.setTitle(sTitle);
                 this._oExpenseDialog.open();
             },
@@ -174,8 +316,6 @@ sap.ui.define([
 
             onSave: async function () {
 
-                const oModel = this.getView().getModel();
-
                 const sRegion = this._oRegionInput.getValue().trim();
                 const sSlab = this._oSlabInput.getValue().trim();
                 const sEngineType = this._oEngineTypeInput.getSelectedKey();
@@ -187,7 +327,7 @@ sap.ui.define([
 
                 const oPayload = {
                     region_regionCode: sRegion,
-                    slab: sSlab,
+                    slab: Number(sSlab),
                     engineType: sEngineType,
 
                     minimumPrice: this._getNumber(
@@ -214,14 +354,13 @@ sap.ui.define([
                     // EDIT
                     if (this._isEditMode) {
 
-                        Object.keys(oPayload).forEach((sProperty) => {
-                            this._oEditContext.setProperty(
-                                sProperty,
-                                oPayload[sProperty]
-                            );
-                        });
-
-                        await this._oEditContext.requestObject();
+                        await Promise.all(
+                            Object.keys(oPayload)
+                                .filter((sKey) => sKey !== "region_regionCode")
+                                .map((sKey) =>
+                                    this._oEditContext.setProperty(
+                                        sKey, oPayload[sKey]))
+                        );
 
                         MessageToast.show("RTO Expense updated successfully.");
 
@@ -230,7 +369,8 @@ sap.ui.define([
                     // CREATE
                     else {
 
-                        const oListBinding = oModel.bindList("/RTOExpense");
+                        const oListBinding =
+                            this.byId("rtoExpensesTable").getBinding("items");
 
                         const oContext = oListBinding.create(oPayload);
 
@@ -240,6 +380,9 @@ sap.ui.define([
                     }
 
                     this._oExpenseDialog.close();
+
+                    this._oEditContext = null;
+                    this._isEditMode = false;
 
                 } catch (oError) {
 
@@ -309,9 +452,15 @@ sap.ui.define([
                 }
 
                 return Number(sValue);
+            },
+
+            onExit: function () {
+
+                if (this._oAdaptFilterDialog) {
+                    this._oAdaptFilterDialog.destroy();
+                    this._oAdaptFilterDialog = null;
+                }
             }
-
-
 
         }
     );

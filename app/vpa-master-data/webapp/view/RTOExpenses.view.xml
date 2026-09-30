@@ -1,67 +1,151 @@
+
 <mvc:View
     controllerName="vpamasterdata.controller.RTOExpenses"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
 
     <Page
-        title="RTO Expenses"
+        id="rtoExpensesPage"
+        title="RTO Expense"
         showNavButton="true"
-        navButtonPress="onNavBack">
-
-        <headerContent>
-            <Button
-                text="Add RTO Expense"
-                icon="sap-icon://add"
-                type="Emphasized"
-                press="onAdd" />
-        </headerContent>
+        navButtonPress=".onNavBack">
 
         <content>
 
+            <!-- ===================================================== -->
+            <!-- FILTER AREA -->
+            <!-- ===================================================== -->
+
+            <VBox class="sapUiSmallMargin">
+
+                <HBox
+                    justifyContent="SpaceBetween"
+                    width="100%">
+
+                    <!-- REGION -->
+                    <VBox width="30%">
+
+                        <Label text="Region"/>
+
+                        <ComboBox
+                            id="expRegionFilter"
+                            width="100%"
+                            placeholder="Select Region"
+                            items="{path: '/Regions'}">
+
+                            <core:Item
+                                key="{regionCode}"
+                                text="{regionCode}"/>
+
+                        </ComboBox>
+
+                    </VBox>
+
+                    <!-- ENGINE TYPE -->
+                    <VBox width="30%">
+
+                        <Label text="Engine Type"/>
+
+                        <ComboBox
+                            id="expEngineTypeFilter"
+                            width="100%"
+                            placeholder="Select Engine Type">
+
+                            <core:Item key="Petrol" text="Petrol"/>
+                            <core:Item key="EV" text="EV"/>
+
+                        </ComboBox>
+
+                    </VBox>
+
+                    <!-- APPROVAL STATUS -->
+                    <VBox width="30%">
+
+                        <Label text="Approval Status"/>
+
+                        <ComboBox
+                            id="expApprovalStatusFilter"
+                            width="100%"
+                            placeholder="Select Approval Status">
+
+                            <core:Item key="DRAFT" text="DRAFT"/>
+                            <core:Item key="SUBMITTED" text="SUBMITTED"/>
+                            <core:Item key="APPROVED" text="APPROVED"/>
+                            <core:Item key="REJECTED" text="REJECTED"/>
+
+                        </ComboBox>
+
+                    </VBox>
+
+                </HBox>
+
+                <HBox
+                    justifyContent="End"
+                    class="sapUiSmallMarginTop">
+
+                    <Button
+                        text="Go"
+                        icon="sap-icon://filter"
+                        type="Emphasized"
+                        press=".onFilter"/>
+
+                    <Button
+                        text="Clear"
+                        icon="sap-icon://clear-filter"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onClearFilters"/>
+
+                    <Button
+                        text="Adapt Filters"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onAdaptFilters"/>
+
+                </HBox>
+
+            </VBox>
+
+            <!-- ===================================================== -->
+            <!-- RTO MASTER TABLE -->
+            <!-- ===================================================== -->
+
             <Table
                 id="rtoExpensesTable"
-                items="{/RTOExpense}"
+                items="{path: '/RTOExpense'}"
                 growing="true"
-                growingThreshold="20">
+                growingThreshold="20"
+                sticky="ColumnHeaders">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+
+                        <Title
+                            text="RTO Expenses"
+                            level="H2"/>
+
+                        <ToolbarSpacer/>
+
+                        <Button
+                            text="Create"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press=".onAdd"/>
+
+                    </OverflowToolbar>
+                </headerToolbar>
 
                 <columns>
-
-                    <Column>
-                        <Text text="Region" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Slab" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Engine Type" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Minimum Price" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Maximum Price" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Percentage" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Fixed Amount" />
-                    </Column>
-
-                    <Column>
-                        <Text text="Approval Status" />
-                    </Column>
-
-                    <Column width="8rem">
-                        <Text text="Actions" />
-                    </Column>
-
+                    <Column><Text text="Region"/></Column>
+                    <Column><Text text="Slab"/></Column>
+                    <Column><Text text="Engine Type"/></Column>
+                    <Column><Text text="Minimum Price"/></Column>
+                    <Column><Text text="Maximum Price"/></Column>
+                    <Column><Text text="Percentage"/></Column>
+                    <Column><Text text="Fixed Amount"/></Column>
+                    <Column><Text text="Approval Status"/></Column>
+                    <Column width="8rem"><Text text="Actions"/></Column>
                 </columns>
 
                 <items>
@@ -70,21 +154,14 @@
 
                         <cells>
 
-                            <Text text="{region_regionCode}" />
-
-                            <Text text="{slab}" />
-
-                            <Text text="{engineType}" />
-
-                            <Text text="{minimumPrice}" />
-
-                            <Text text="{maximumPrice}" />
-
-                            <Text text="{percentage}" />
-
-                            <Text text="{fixedAmount}" />
-
-                            <Text text="{approvalStatus}" />
+                            <Text text="{region_regionCode}"/>
+                            <Text text="{slab}"/>
+                            <Text text="{engineType}"/>
+                            <Text text="{minimumPrice}"/>
+                            <Text text="{maximumPrice}"/>
+                            <Text text="{percentage}"/>
+                            <Text text="{fixedAmount}"/>
+                            <Text text="{approvalStatus}"/>
 
                             <HBox>
 
@@ -92,13 +169,13 @@
                                     icon="sap-icon://edit"
                                     type="Transparent"
                                     tooltip="Edit"
-                                    press="onEdit" />
+                                    press=".onEdit"/>
 
                                 <Button
                                     icon="sap-icon://delete"
                                     type="Transparent"
                                     tooltip="Delete"
-                                    press="onDelete" />
+                                    press=".onDelete"/>
 
                             </HBox>
 
