@@ -4,43 +4,58 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:core="sap.ui.core">
-
+ 
     <Page
         id="masterDataPage"
-        title="Master Data Management">
-
+        title="Master Data Management"
+        class="masterDataPage">
+ 
         <content>
-
+ 
             <f:GridList
                 id="masterDataGrid"
-                class="sapUiResponsiveContentPadding"
+                class="masterDataGrid"
                 items="{tile>/tiles}">
-
+ 
                 <f:GridListItem
                     type="Active"
-                    press=".onTilePress">
-
+                    press=".onTilePress"
+                    class="masterDataCard">
+ 
                     <VBox
-                        height="150px"
+                        height="180px"
                         alignItems="Center"
-                        justifyContent="Center">
-
-                        <core:Icon
-                            src="{tile>icon}"
-                            size="2.5rem"/>
-
+                        justifyContent="Center"
+                        class="masterDataCardContent">
+ 
+                        <!-- Icon -->
+                        <VBox
+                            width="70px"
+                            height="70px"
+                            alignItems="Center"
+                            justifyContent="Center"
+                            class="masterIconCircle">
+ 
+                            <core:Icon
+                                src="{tile>icon}"
+                                size="2.5rem"
+                                class="masterIcon"/>
+ 
+                        </VBox>
+ 
+                        <!-- Title -->
                         <Title
                             text="{tile>title}"
-                            class="sapUiSmallMarginTop"/>
-
+                            class="masterDataTitle"/>
+ 
                     </VBox>
-
+ 
                 </f:GridListItem>
-
+ 
             </f:GridList>
-
+ 
         </content>
-
+ 
     </Page>
-
+ 
 </mvc:View>

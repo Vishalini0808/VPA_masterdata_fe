@@ -1,0 +1,23 @@
+_schema-version: "3.2"
+ID: VPA_fe
+description: VPA Frontend
+version: 1.0.0
+
+modules:
+
+  - name: VPA_fe
+    type: html5
+    path: app
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      build-result: dist
+      supported-platforms: []
+
+resources: []
+
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true

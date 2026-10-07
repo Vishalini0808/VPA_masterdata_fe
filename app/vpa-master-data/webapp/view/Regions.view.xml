@@ -8,7 +8,8 @@
         id="regionPage"
         title="Region Master"
         showNavButton="true"
-        navButtonPress=".onPageNavButtonPress">
+        navButtonPress=".onPageNavButtonPress"
+        class="myPageBackground">
  
         <content>
  
@@ -192,9 +193,7 @@
  
                 <items>
  
-                    <ColumnListItem
-                        type="Navigation"
-                        press=".onRegionPress">
+                    <ColumnListItem>
  
                         <cells>
  
@@ -251,77 +250,91 @@
  
         <dependents>
  
-            <Dialog
-                id="regionDialog"
-                title="Add Region"
-                contentWidth="400px">
+                              <Dialog
+                                id="regionDialog"
+                                title="Add Region"
+                                contentWidth="400px">
  
-                <content>
+                                <content>
  
-                    <VBox
-                        class="sapUiMediumMargin">
+                                    <VBox class="sapUiMediumMargin">
  
-                        <!-- REGION CODE -->
+                                        <!-- REGION CODE -->
  
-                        <Label
-                            text="Region Code"
-                            required="true"/>
+                                        <Label
+                                            text="Region Code"
+                                            required="true"/>
  
-                        <Input
-                            id="regionCodeInput"
-                            placeholder="Enter region code"
-                            editable="false"/>
- 
- 
-                        <!-- REGION NAME -->
- 
-                        <Label
-                            text="Region Name"
-                            class="sapUiSmallMarginTop"/>
- 
-                        <Input
-                            id="regionNameInput"
-                            placeholder="Enter region name"/>
+                                        <Input
+                                            id="regionCodeInput"
+                                            placeholder="Enter region code"
+                                            editable="false"/>
  
  
-                        <!-- RTO BASIS -->
+                                        <!-- REGION NAME -->
  
-                        <Label
-                            text="RTO Basis"
-                            class="sapUiSmallMarginTop"/>
+                                        <Label
+                                            text="Region Name"
+                                            class="sapUiSmallMarginTop"/>
  
-                        <Input
-                            id="rtoBasisInput"
-                            placeholder="Enter RTO basis"/>
+                                        <ComboBox
+                                            id="idRegionNameInput"
+                                            width="100%"
+                                            placeholder="Select Region Name"
+                                            items="{/Regions}">
  
-                    </VBox>
+                                            <core:Item
+                                                key="{regionName}"
+                                                text="{regionName}"/>
  
-                </content>
- 
- 
-                <!-- SAVE -->
- 
-                <beginButton>
- 
-                    <Button
-                        text="Save"
-                        type="Emphasized"
-                        press=".onSave"/>
- 
-                </beginButton>
+                                        </ComboBox>
  
  
-                <!-- CANCEL -->
+                                        <!-- RTO BASIS -->
  
-                <endButton>
+                                        <Label
+                                            text="RTO Basis"
+                                            class="sapUiSmallMarginTop"/>
  
-                    <Button
-                        text="Cancel"
-                        press=".onCancel"/>
+                                        <ComboBox
+                                            id="idRtoBasisInput"
+                                            width="100%"
+                                            placeholder="Select RTO Basis">
  
-                </endButton>
+                                            <items>
  
-            </Dialog>
+                                                <core:Item
+                                                    key="ExShowroom"
+                                                    text="ExShowroom"/>
+ 
+                                            </items>
+ 
+                                        </ComboBox>
+ 
+                                    </VBox>
+ 
+                                </content>
+ 
+ 
+                                <beginButton>
+ 
+                                    <Button
+                                        text="Save"
+                                        type="Emphasized"
+                                        press=".onSave"/>
+ 
+                                </beginButton>
+ 
+ 
+                                <endButton>
+ 
+                                    <Button
+                                        text="Cancel"
+                                        press=".onCancel"/>
+ 
+                                </endButton>
+ 
+                            </Dialog>
  
         </dependents>
  
