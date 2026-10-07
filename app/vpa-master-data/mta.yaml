@@ -71,6 +71,14 @@ resources:
             ProxyType: Internet
             Type: HTTP
             URL: https://ui5.sap.com
+
+           # VPA Master Backend Destination
+          - Authentication: NoAuthentication
+            Name: VPA_backend
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://b1c17123trial-dev-vpa-srv.cfapps.us10-003.hana.ondemand.com
+
           existing_destinations_policy: update
       version: 1.0.0
     service: destination

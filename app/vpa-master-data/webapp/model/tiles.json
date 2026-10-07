@@ -3,37 +3,44 @@
         {
             "title": "Region Master",
             "key": "regions",
-            "icon": "sap-icon://world"
+            "icon": "sap-icon://world",
+            "description": "Regions and area mapping"
         },
         {
             "title": "Model Master",
             "key": "models",
-            "icon": "sap-icon://product"
+            "icon": "sap-icon://product",
+            "description": "Vehicle models and variants"
         },
         {
             "title": "Pricing Components",
             "key": "pricingComponents",
-            "icon": "sap-icon://money-bills"
+            "icon": "sap-icon://money-bills",
+            "description": "Price elements and charges"
         },
         {
             "title": "RTO Master",
             "key": "rtoMasters",
-            "icon": "sap-icon://car-rental"
+            "icon": "sap-icon://car-rental",
+            "description": "RTO offices and registration setup"
         },
         {
             "title": "RTO Expense",
             "key": "rtoExpenses",
-            "icon": "sap-icon://expense-report"
+            "icon": "sap-icon://expense-report",
+            "description": "Registration and road tax expenses"
         },
         {
             "title": "Parts Master",
             "key": "parts",
-            "icon": "sap-icon://technical-object"
+            "icon": "sap-icon://technical-object",
+            "description": "Parts and accessories catalog"
         },
         {
             "title": "MTO Configuration",
             "key": "mtoConfigurations",
-            "icon": "sap-icon://action-settings"
+            "icon": "sap-icon://action-settings",
+            "description": "Made-to-order configuration rules"
         }
     ]
 }

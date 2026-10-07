@@ -15,6 +15,17 @@
       "version": "1.32.0",
       "toolsId": "429366a5-ebc0-4df3-876a-ee4c3c19bddf"
     },
+    "crossNavigation": {
+      "inbounds": {
+        "vpamasterdata-display": {
+          "semanticObject": "VPAMasterData",
+          "action": "display",
+          "title": "{{appTitle}}",
+          "subTitle": "Master Data Maintenance",
+          "icon": "sap-icon://database"
+        }
+      }
+    },
     "dataSources": {
       "mainService": {
         "uri": "/odata/v4/master/",
