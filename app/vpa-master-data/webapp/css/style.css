@@ -1,1 +1,296 @@
-/* Enter your custom styles here */
+ 
+/* =========================================================
+   MASTER DATA MANAGEMENT PAGE
+   ========================================================= */
+ 
+.masterDataPage {
+ 
+    background: linear-gradient(
+        135deg,
+        #F5F9FC 0%,
+        #E8F1F8 50%,
+        #D9EAF5 100%
+    ) !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   PAGE CONTENT BACKGROUND
+   ========================================================= */
+ 
+.masterDataPage .sapMPageEnableScrolling {
+ 
+    background: linear-gradient(
+        135deg,
+        #F5F9FC 0%,
+        #E8F1F8 50%,
+        #D9EAF5 100%
+    ) !important;
+ 
+}
+ 
+ 
+.masterDataPage .sapMPageBgStandard {
+ 
+    background: linear-gradient(
+        135deg,
+        #F5F9FC 0%,
+        #E8F1F8 50%,
+        #D9EAF5 100%
+    ) !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+ 
+.masterDataPage .sapMPageHeader {
+ 
+    background-color: #063970 !important;
+ 
+    border-bottom: 1px solid #063970 !important;
+ 
+    box-shadow:
+        0 2px 8px rgba(6, 57, 112, 0.20);
+ 
+}
+ 
+ 
+/* =========================================================
+   INCREASE HEADER HEIGHT
+   ========================================================= */
+ 
+.masterDataPage .sapMPageHeader,
+.masterDataPage .sapMPageHeader .sapMBar {
+ 
+    height: 50px !important;
+ 
+    min-height: 50px !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   PAGE TITLE
+   ========================================================= */
+ 
+.masterDataPage .sapMPageHeader .sapMTitle {
+ 
+    color: #FFFFFF !important;
+ 
+    font-weight: 700 !important;
+ 
+    line-height: 60px !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   HEADER BUTTON / ICON
+   ========================================================= */
+ 
+.masterDataPage .sapMPageHeader .sapMBtnIcon {
+ 
+    color: #FFFFFF !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   GRID
+   ========================================================= */
+ 
+.masterDataGrid {
+ 
+    width: 100%;
+ 
+    padding: 30px 40px !important;
+ 
+    box-sizing: border-box;
+ 
+}
+ 
+ 
+/* =========================================================
+   CARD
+   ========================================================= */
+ 
+.masterDataCard {
+ 
+    background: rgba(
+        255,
+        255,
+        255,
+        0.96
+    ) !important;
+ 
+    border-radius: 18px !important;
+ 
+    border: 1px solid
+        rgba(
+            6,
+            57,
+            112,
+            0.12
+        ) !important;
+ 
+    box-shadow:
+        0 5px 16px
+        rgba(
+            6,
+            57,
+            112,
+            0.12
+        );
+ 
+    overflow: hidden;
+ 
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+ 
+}
+ 
+ 
+/* =========================================================
+   CARD CONTENT
+   ========================================================= */
+ 
+.masterDataCardContent {
+ 
+    width: 100%;
+ 
+    padding: 15px;
+ 
+    box-sizing: border-box;
+ 
+}
+ 
+ 
+/* =========================================================
+   ICON
+   ========================================================= */
+ 
+.masterIconCircle {
+ 
+    margin-bottom: 14px;
+ 
+}
+ 
+ 
+/* =========================================================
+   ICON COLOR
+   ========================================================= */
+ 
+.masterIcon {
+ 
+    color: #063970 !important;
+ 
+}
+ 
+ 
+/* =========================================================
+   TITLE
+   ========================================================= */
+ 
+.masterDataTitle {
+ 
+    color: #063970 !important;
+ 
+    font-size: 17px !important;
+ 
+    font-weight: 700 !important;
+ 
+    text-align: center;
+ 
+}
+ 
+ 
+/* =========================================================
+   CARD HOVER
+   ========================================================= */
+ 
+.masterDataCard:hover {
+ 
+    transform: translateY(-6px);
+ 
+    border-color: #7FA9CC !important;
+ 
+    box-shadow:
+        0 12px 25px
+        rgba(
+            6,
+            57,
+            112,
+            0.20
+        );
+ 
+}
+ 
+ 
+/* =========================================================
+   CARD CLICK
+   ========================================================= */
+ 
+.masterDataCard:active {
+ 
+    transform: scale(0.98);
+ 
+}
+ 
+ 
+/* =========================================================
+   RESPONSIVE - LARGE SCREEN
+   ========================================================= */
+ 
+@media (min-width: 1400px) {
+ 
+    .masterDataGrid {
+ 
+        padding-left: 45px !important;
+ 
+        padding-right: 45px !important;
+ 
+    }
+ 
+}
+ 
+ 
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+ 
+@media (max-width: 1000px) {
+ 
+    .masterDataGrid {
+ 
+        padding: 25px !important;
+ 
+    }
+ 
+}
+ 
+ 
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+ 
+@media (max-width: 600px) {
+ 
+    .masterDataGrid {
+ 
+        padding: 15px !important;
+ 
+    }
+ 
+    .masterDataCard {
+ 
+        border-radius: 14px !important;
+ 
+    }
+ 
+}
