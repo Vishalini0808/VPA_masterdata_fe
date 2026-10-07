@@ -14,34 +14,7 @@ sap.ui.define([
 
     return Controller.extend("vpamasterdata.controller.View1", {
 
-        onSearch: function (oEvent) {
-
-            const sQuery = oEvent.getParameter("newValue");
-
-            const aFilters = sQuery
-                ? [
-                    new Filter({
-                        filters: [
-                            new Filter(
-                                "title",
-                                FilterOperator.Contains,
-                                sQuery
-                            ),
-                            new Filter(
-                                "description",
-                                FilterOperator.Contains,
-                                sQuery
-                            )
-                        ],
-                        and: false
-                    })
-                ]
-                : [];
-
-            this.byId("masterDataGrid")
-                .getBinding("items")
-                .filter(aFilters);
-        },
+        
 
         onRefresh: function () {
 

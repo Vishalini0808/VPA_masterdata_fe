@@ -4,81 +4,58 @@
     xmlns="sap.m"
     xmlns:f="sap.f"
     xmlns:core="sap.ui.core">
-
-    <Page id="masterDataPage" title="Vehicle Pricing Automation - Master Data" showHeader="true">
-
-        <headerContent>
-            <Button icon="sap-icon://refresh" tooltip="Refresh" press=".onRefresh"/>
-        </headerContent>
-
-        <subHeader>
-            <OverflowToolbar>
-                <SearchField
-                    id="tileSearch"
-                    width="20rem"
-                    placeholder="Search master data..."
-                    liveChange=".onSearch"/>
-                <ToolbarSpacer/>
-                <ObjectStatus
-                    text="{kpi>/lastSync}"
-                    icon="sap-icon://synchronize"
-                    state="Information"/>
-            </OverflowToolbar>
-        </subHeader>
-
+ 
+    <Page
+        id="masterDataPage"
+        title="Master Data Management"
+        class="masterDataPage">
+ 
         <content>
-
-            <!-- KPI STRIP -->
-            <Title text="Overview" class="sapUiSmallMarginBegin sapUiSmallMarginTop"/>
-            <FlexBox
-                wrap="Wrap"
-                class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop"
-                items="{kpi>/cards}">
-                <GenericTile
-                    class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
-                    header="{kpi>title}"
-                    subheader="{kpi>subtitle}"
-                    frameType="OneByOne">
-                    <TileContent unit="{kpi>unit}" footer="{kpi>footer}">
-                        <NumericContent
-                            value="{kpi>value}"
-                            valueColor="{kpi>color}"
-                            icon="{kpi>icon}"
-                            indicator="{kpi>trend}"
-                            withMargin="false"/>
-                    </TileContent>
-                </GenericTile>
-            </FlexBox>
-
-            <!-- MASTER DATA TILES -->
-            <Title text="Master Data" class="sapUiSmallMarginBegin sapUiSmallMarginTop"/>
+ 
             <f:GridList
                 id="masterDataGrid"
-                class="sapUiResponsiveContentPadding"
+                class="masterDataGrid"
                 items="{tile>/tiles}">
-
-                <f:GridListItem type="Active" press=".onTilePress">
-                    <VBox class="sapUiSmallMargin" height="9rem" justifyContent="SpaceBetween">
-                        <HBox justifyContent="SpaceBetween" alignItems="Start">
-                            <core:Icon src="{tile>icon}" size="2rem" color="Default"/>
-                            <ObjectNumber
-                                number="{tile>count}"
-                                unit="records"
-                                visible="{= !!${tile>count} }"
-                                emphasized="true"
-                                state="None"/>
-                        </HBox>
-                        <VBox>
-                            <Title text="{tile>title}" titleStyle="H5"/>
-                            <Text text="{tile>description}" maxLines="2"/>
+ 
+                <f:GridListItem
+                    type="Active"
+                    press=".onTilePress"
+                    class="masterDataCard">
+ 
+                    <VBox
+                        height="180px"
+                        alignItems="Center"
+                        justifyContent="Center"
+                        class="masterDataCardContent">
+ 
+                        <!-- Icon -->
+                        <VBox
+                            width="70px"
+                            height="70px"
+                            alignItems="Center"
+                            justifyContent="Center"
+                            class="masterIconCircle">
+ 
+                            <core:Icon
+                                src="{tile>icon}"
+                                size="2.5rem"
+                                class="masterIcon"/>
+ 
                         </VBox>
+ 
+                        <!-- Title -->
+                        <Title
+                            text="{tile>title}"
+                            class="masterDataTitle"/>
+ 
                     </VBox>
+ 
                 </f:GridListItem>
-
+ 
             </f:GridList>
-
+ 
         </content>
-
+ 
     </Page>
-
-</mvc:View> 
+ 
+</mvc:View>
