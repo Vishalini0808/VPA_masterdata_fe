@@ -1,3 +1,4 @@
+
 <mvc:View
     controllerName="vpamasterdata.controller.Parts"
     xmlns:mvc="sap.ui.core.mvc"
@@ -9,59 +10,56 @@
         showNavButton="true"
         navButtonPress=".onNavBack">
 
-        <!-- Header -->
-
-        <headerContent>
-
-            <Button
-                text="Create"
-                icon="sap-icon://add"
-                type="Emphasized"
-                press=".onAdd" />
-
-        </headerContent>
-
-
         <content>
 
-            <!-- Filter Area -->
+            <!-- =====================================================
+                 FILTER AREA
+                 ===================================================== -->
 
-            <VBox class="sapUiSmallMargin">
+            <VBox
+                class="sapUiMediumMarginBottom">
 
                 <HBox
                     width="100%"
-                    alignItems="End">
+                    alignItems="End"
+                    class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
 
-                    <!-- Part Code -->
+                    <!-- =================================================
+                         PART CODE
+                         ================================================= -->
 
                     <VBox
-                        width="25%"
-                        class="sapUiSmallMarginEnd">
+                            width="25%"
+                            class="sapUiSmallMarginEnd sapUiSmallMarginTop">
 
-                        <Label text="Part Code" />
+                            <Label
+                                text="Part Code" />
 
-                        <ComboBox
-                            id="partCodeFilter"
-                            width="100%"
-                            placeholder="Select Part Code"
-                            items="{/Parts}">
+                            <ComboBox
+                                id="partCodeFilter"
+                                width="100%"
+                                placeholder="Select Part Code"
+                                items="{/Parts}">
 
-                            <core:Item
-                                key="{partCode}"
-                                text="{partCode}" />
+                                <core:Item
+                                    key="{partCode}"
+                                    text="{partCode}" />
 
-                        </ComboBox>
+                            </ComboBox>
 
                     </VBox>
 
 
-                    <!-- Part Description -->
+                    <!-- =================================================
+                         PART DESCRIPTION
+                         ================================================= -->
 
-                    <VBox
+                  <VBox
                         width="30%"
-                        class="sapUiSmallMarginEnd">
+                        class="sapUiSmallMarginEnd sapUiSmallMarginTop">
 
-                        <Label text="Part Description" />
+                        <Label
+                            text="Part Description" />
 
                         <ComboBox
                             id="partDescriptionFilter"
@@ -77,8 +75,9 @@
 
                     </VBox>
 
-
-                    <!-- Filter Buttons -->
+                    <!-- =================================================
+                         FILTER BUTTONS
+                         ================================================= -->
 
                     <HBox>
 
@@ -101,7 +100,31 @@
             </VBox>
 
 
-            <!-- Parts Table -->
+            <!-- =====================================================
+                 PARTS SECTION TOOLBAR
+                 ===================================================== -->
+
+            <Toolbar
+                class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
+
+                <Title
+                    text="Parts"
+                    level="H2" />
+
+                <ToolbarSpacer />
+
+                <Button
+                    text="Create"
+                    icon="sap-icon://add"
+                    type="Emphasized"
+                    press=".onAdd" />
+
+            </Toolbar>
+
+
+            <!-- =====================================================
+                 PARTS TABLE
+                 ===================================================== -->
 
             <Table
                 id="partsTable"
@@ -109,46 +132,89 @@
                 growing="true"
                 growingThreshold="20">
 
-                <!-- Table Columns -->
+                <!-- =================================================
+                     TABLE COLUMNS
+                     ================================================= -->
 
                 <columns>
 
-                    <Column>
-                        <Text text="Part Code" />
-                    </Column>
+                    <!-- Part Code -->
 
                     <Column>
-                        <Text text="Valid From" />
+
+                        <Text
+                            text="Part Code" />
+
                     </Column>
 
-                    <Column>
-                        <Text text="Description" />
-                    </Column>
+
+                    <!-- Valid From -->
 
                     <Column>
-                        <Text text="MIY Cost" />
+
+                        <Text
+                            text="Valid From" />
+
                     </Column>
 
-                    <Column>
-                        <Text text="MIY Markup" />
-                    </Column>
+
+                    <!-- Description -->
 
                     <Column>
-                        <Text text="Price Indicator" />
+
+                        <Text
+                            text="Description" />
+
                     </Column>
+
+
+                    <!-- MIY Cost -->
+
+                    <Column>
+
+                        <Text
+                            text="MIY Cost" />
+
+                    </Column>
+
+
+                    <!-- MIY Markup -->
+
+                    <Column>
+
+                        <Text
+                            text="MIY Markup" />
+
+                    </Column>
+
+
+                    <!-- Price Indicator -->
+
+                    <Column>
+
+                        <Text
+                            text="Price Indicator" />
+
+                    </Column>
+
+
+                    <!-- Actions -->
 
                     <Column
                         width="8rem"
                         hAlign="Center">
 
-                        <Text text="Actions" />
+                        <Text
+                            text="Actions" />
 
                     </Column>
 
                 </columns>
 
 
-                <!-- Table Rows -->
+                <!-- =================================================
+                     TABLE ITEMS
+                     ================================================= -->
 
                 <items>
 
@@ -156,23 +222,43 @@
 
                         <cells>
 
+                            <!-- Part Code -->
+
                             <Text
                                 text="{partCode}" />
+
+
+                            <!-- Valid From -->
 
                             <Text
                                 text="{validFrom}" />
 
+
+                            <!-- Description -->
+
                             <Text
                                 text="{description}" />
+
+
+                            <!-- MIY Cost -->
 
                             <Text
                                 text="{miyCost}" />
 
+
+                            <!-- MIY Markup -->
+
                             <Text
                                 text="{miyMarkup}" />
 
+
+                            <!-- Price Indicator -->
+
                             <Text
                                 text="{priceIndicator}" />
+
+
+                            <!-- Actions -->
 
                             <HBox
                                 justifyContent="Center">
