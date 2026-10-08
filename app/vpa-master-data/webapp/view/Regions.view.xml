@@ -3,341 +3,217 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core">
- 
+
     <Page
         id="regionPage"
         title="Region Master"
         showNavButton="true"
         navButtonPress=".onPageNavButtonPress"
         class="myPageBackground">
- 
+
         <content>
- 
+
             <!-- ===================================================== -->
             <!-- FILTER AREA -->
             <!-- ===================================================== -->
- 
-           <VBox class="sapUiSmallMargin">
- 
-    <HBox
-        justifyContent="SpaceBetween"
-        width="100%">
- 
-        <!-- REGION CODE -->
- 
-        <VBox width="30%">
- 
-            <Label text="Region Code"/>
- 
-            <ComboBox
-                id="regionCodeFilter"
-                width="100%"
-                placeholder="Select Region Code"
-                items="{path: '/Regions'}">
- 
-                <core:Item
-                    key="{regionCode}"
-                    text="{regionCode}"/>
- 
-            </ComboBox>
- 
-        </VBox>
- 
- 
-        <!-- REGION NAME -->
- 
-        <VBox width="30%">
- 
-            <Label text="Region Name"/>
- 
-            <ComboBox
-                id="regionNameFilter"
-                width="100%"
-                placeholder="Select Region Name"
-                items="{path: '/Regions'}">
- 
-                <core:Item
-                    key="{regionName}"
-                    text="{regionName}"/>
- 
-            </ComboBox>
- 
-        </VBox>
- 
- 
-        <!-- RTO BASIS -->
- 
-        <VBox width="30%">
- 
-            <Label text="RTO Basis"/>
- 
-            <ComboBox
-                id="rtoBasisFilter"
-                width="100%"
-                placeholder="Select RTO Basis"
-                items="{path: '/Regions'}">
- 
-                <core:Item
-                    key="{rtoBasis}"
-                    text="{rtoBasis}"/>
- 
-            </ComboBox>
- 
-        </VBox>
- 
-    </HBox>
- 
- 
-    <HBox
-        justifyContent="End"
-        class="sapUiSmallMarginTop">
- 
-        <Button
-            text="Go"
-            icon="sap-icon://filter"
-            type="Emphasized"
-            press=".onFilter"/>
- 
-        <Button
-            text="Clear"
-            icon="sap-icon://clear-filter"
-            type="Transparent"
-            class="sapUiTinyMarginBegin"
-            press=".onClearFilters"/>
- 
-        <Button
-            text="Adapt Filters"
-            type="Transparent"
-            class="sapUiTinyMarginBegin"
-            press=".onAdaptFilters"/>
- 
-    </HBox>
- 
-</VBox>
- 
+
+            <VBox class="sapUiSmallMargin">
+
+                <HBox
+                    justifyContent="SpaceBetween"
+                    width="100%">
+
+                    <!-- REGION CODE -->
+                    <VBox width="30%">
+                        <Label text="Region Code"/>
+                        <ComboBox
+                            id="regionCodeFilter"
+                            width="100%"
+                            placeholder="Select Region Code"
+                            items="{path: '/Regions'}">
+                            <core:Item
+                                key="{regionCode}"
+                                text="{regionCode}"/>
+                        </ComboBox>
+                    </VBox>
+
+                    <!-- REGION NAME -->
+                    <VBox width="30%">
+                        <Label text="Region Name"/>
+                        <ComboBox
+                            id="regionNameFilter"
+                            width="100%"
+                            placeholder="Select Region Name"
+                            items="{path: '/Regions'}">
+                            <core:Item
+                                key="{regionName}"
+                                text="{regionName}"/>
+                        </ComboBox>
+                    </VBox>
+
+                    <!-- RTO BASIS -->
+                    <VBox width="30%">
+                        <Label text="RTO Basis"/>
+                        <ComboBox
+                            id="rtoBasisFilter"
+                            width="100%"
+                            placeholder="Select RTO Basis"
+                            items="{path: '/Regions'}">
+                            <core:Item
+                                key="{rtoBasis}"
+                                text="{rtoBasis}"/>
+                        </ComboBox>
+                    </VBox>
+
+                </HBox>
+
+                <HBox
+                    justifyContent="End"
+                    class="sapUiSmallMarginTop">
+
+                    <Button
+                        text="Go"
+                        icon="sap-icon://filter"
+                        type="Emphasized"
+                        press=".onFilter"/>
+
+                    <Button
+                        text="Clear"
+                        icon="sap-icon://clear-filter"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onClearFilters"/>
+
+                    <Button
+                        text="Adapt Filters"
+                        type="Transparent"
+                        class="sapUiTinyMarginBegin"
+                        press=".onAdaptFilters"/>
+
+                </HBox>
+
+            </VBox>
+
             <!-- ===================================================== -->
-            <!-- REGION TABLE -->
+            <!-- REGION TABLE (inline add row) -->
             <!-- ===================================================== -->
- 
+
             <Table
                 id="regionTable"
-                items="{path: '/Regions'}"
+                items="{path: '/Regions', parameters: {$$updateGroupId: 'regionGroup'}}"
                 growing="true"
                 growingThreshold="20"
                 mode="MultiSelect"
                 sticky="ColumnHeaders">
- 
+
                 <!-- TABLE HEADER -->
- 
                 <headerToolbar>
- 
                     <OverflowToolbar>
- 
                         <Title
                             text="Regions"
                             level="H2"/>
- 
                         <ToolbarSpacer/>
- 
                         <Button
-                            text="Create"
+                            text="Add Row"
                             icon="sap-icon://add"
                             type="Emphasized"
-                            press=".onAdd"/>
- 
+                            press=".onAddRow"/>
                     </OverflowToolbar>
- 
                 </headerToolbar>
- 
- 
+
                 <!-- TABLE COLUMNS -->
- 
                 <columns>
- 
-                    <Column>
- 
-                        <Text
-                            text="Region Code"/>
- 
-                    </Column>
- 
- 
-                    <Column>
- 
-                        <Text
-                            text="Region Name"/>
- 
-                    </Column>
- 
- 
-                    <Column>
- 
-                        <Text
-                            text="RTO Basis"/>
- 
-                    </Column>
- 
- 
-                    <Column
-                        width="10rem">
- 
-                        <Text
-                            text="Actions"/>
- 
-                    </Column>
- 
+                    <Column><Text text="Region Code"/></Column>
+                    <Column><Text text="Region Name"/></Column>
+                    <Column><Text text="RTO Basis"/></Column>
+                    <Column><Text text="Status"/></Column>
+                    <Column width="10rem"><Text text="Actions"/></Column>
                 </columns>
- 
- 
+
                 <!-- TABLE ROWS -->
- 
                 <items>
- 
                     <ColumnListItem>
- 
                         <cells>
- 
+
                             <!-- REGION CODE -->
- 
-                            <Text
-                                text="{regionCode}"/>
- 
- 
-                            <!-- REGION NAME -->
- 
-                            <Text
-                                text="{regionName}"/>
- 
- 
-                            <!-- RTO BASIS -->
- 
-                            <Text
-                                text="{rtoBasis}"/>
- 
- 
-                            <!-- ACTIONS -->
- 
                             <HBox>
- 
+                                <Text
+                                    text="{regionCode}"
+                                    visible="{= !%{@$ui5.context.isTransient}}"/>
+                                <Input
+                                    value="{regionCode}"
+                                    placeholder="Enter region code"
+                                    visible="{= !!%{@$ui5.context.isTransient}}"/>
+                            </HBox>
+
+                            <!-- REGION NAME -->
+                            <HBox>
+                                <Text
+                                    text="{regionName}"
+                                    visible="{= !%{@$ui5.context.isTransient}}"/>
+                                <Input
+                                    value="{regionName}"
+                                    placeholder="Enter region name"
+                                    visible="{= !!%{@$ui5.context.isTransient}}"/>
+                            </HBox>
+
+                            <!-- RTO BASIS -->
+                            <HBox>
+                                <Text
+                                    text="{rtoBasis}"
+                                    visible="{= !%{@$ui5.context.isTransient}}"/>
+                                <ComboBox
+                                    selectedKey="{rtoBasis}"
+                                    width="100%"
+                                    placeholder="Select RTO Basis"
+                                    visible="{= !!%{@$ui5.context.isTransient}}">
+                                    <core:Item
+                                        key="ExShowroom"
+                                        text="ExShowroom"/>
+                                </ComboBox>
+                            </HBox>
+
+                            <!-- STATUS -->
+                            <ObjectStatus
+                                text="{status}"
+                                state="{= ${status} === 'Draft' ? 'Warning' : 'Success'}"/>
+
+                            <!-- ACTIONS -->
+                            <HBox>
                                 <Button
                                     icon="sap-icon://edit"
                                     type="Transparent"
                                     tooltip="Edit"
                                     press=".onEdit"/>
- 
                                 <Button
                                     icon="sap-icon://delete"
                                     type="Transparent"
                                     tooltip="Delete"
                                     press=".onDelete"/>
- 
                             </HBox>
- 
+
                         </cells>
- 
                     </ColumnListItem>
- 
                 </items>
- 
+
             </Table>
- 
+
         </content>
- 
- 
+
         <!-- ========================================================= -->
-        <!-- REGION DIALOG -->
+        <!-- FOOTER (Submit on the right) -->
         <!-- ========================================================= -->
- 
-        <dependents>
- 
-                              <Dialog
-                                id="regionDialog"
-                                title="Add Region"
-                                contentWidth="400px">
- 
-                                <content>
- 
-                                    <VBox class="sapUiMediumMargin">
- 
-                                        <!-- REGION CODE -->
- 
-                                        <Label
-                                            text="Region Code"
-                                            required="true"/>
- 
-                                        <Input
-                                            id="regionCodeInput"
-                                            placeholder="Enter region code"
-                                            editable="false"/>
- 
- 
-                                        <!-- REGION NAME -->
- 
-                                        <Label
-                                            text="Region Name"
-                                            class="sapUiSmallMarginTop"/>
- 
-                                        <ComboBox
-                                            id="idRegionNameInput"
-                                            width="100%"
-                                            placeholder="Select Region Name"
-                                            items="{/Regions}">
- 
-                                            <core:Item
-                                                key="{regionName}"
-                                                text="{regionName}"/>
- 
-                                        </ComboBox>
- 
- 
-                                        <!-- RTO BASIS -->
- 
-                                        <Label
-                                            text="RTO Basis"
-                                            class="sapUiSmallMarginTop"/>
- 
-                                        <ComboBox
-                                            id="idRtoBasisInput"
-                                            width="100%"
-                                            placeholder="Select RTO Basis">
- 
-                                            <items>
- 
-                                                <core:Item
-                                                    key="ExShowroom"
-                                                    text="ExShowroom"/>
- 
-                                            </items>
- 
-                                        </ComboBox>
- 
-                                    </VBox>
- 
-                                </content>
- 
- 
-                                <beginButton>
- 
-                                    <Button
-                                        text="Save"
-                                        type="Emphasized"
-                                        press=".onSave"/>
- 
-                                </beginButton>
- 
- 
-                                <endButton>
- 
-                                    <Button
-                                        text="Cancel"
-                                        press=".onCancel"/>
- 
-                                </endButton>
- 
-                            </Dialog>
- 
-        </dependents>
- 
+
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    text="Submit"
+                    type="Emphasized"
+                    press=".onSubmit"/>
+            </OverflowToolbar>
+        </footer>
+
     </Page>
- 
+
 </mvc:View>

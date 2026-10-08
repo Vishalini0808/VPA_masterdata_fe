@@ -25,6 +25,9 @@ sap.ui.define([
 ) {
     "use strict";
 
+    // must match $$updateGroupId in the view
+    const UPDATE_GROUP = "regionGroup";
+
     return Controller.extend(
         "vpamasterdata.controller.Regions",
         {
@@ -35,127 +38,10 @@ sap.ui.define([
 
             onInit: function () {
 
-                const oModel = this.getView().getModel();
+                // contexts of existing rows currently in edit mode
+                this._aEditContexts = [];
 
-                if (!oModel) {
-                    return;
-                }
-
-                const oBinding = oModel.bindList("/Regions");
-
-                oBinding
-                    .requestContexts(0, 1000)
-                    .then(function (aContexts) {
-
-                        const aRegions = aContexts.map(
-                            function (oContext) {
-                                return oContext.getObject();
-                            }
-                        );
-
-                        const aRegionCodes = [];
-                        const aRegionNames = [];
-                        const aRtoBasis = [];
-
-                        aRegions.forEach(function (oRegion) {
-
-                            // -----------------------------------------
-                            // REGION CODE
-                            // -----------------------------------------
-
-                            if (
-                                oRegion.regionCode &&
-                                !aRegionCodes.some(
-                                    function (oItem) {
-                                        return oItem.key ===
-                                            oRegion.regionCode;
-                                    }
-                                )
-                            ) {
-
-                                aRegionCodes.push({
-                                    key: oRegion.regionCode,
-                                    text: oRegion.regionCode
-                                });
-
-                            }
-
-
-                            // -----------------------------------------
-                            // REGION NAME
-                            // -----------------------------------------
-
-                            if (
-                                oRegion.regionName &&
-                                !aRegionNames.some(
-                                    function (oItem) {
-                                        return oItem.key ===
-                                            oRegion.regionName;
-                                    }
-                                )
-                            ) {
-
-                                aRegionNames.push({
-                                    key: oRegion.regionName,
-                                    text: oRegion.regionName
-                                });
-
-                            }
-
-
-                            // -----------------------------------------
-                            // RTO BASIS
-                            // -----------------------------------------
-
-                            if (
-                                oRegion.rtoBasis &&
-                                !aRtoBasis.some(
-                                    function (oItem) {
-                                        return oItem.key ===
-                                            oRegion.rtoBasis;
-                                    }
-                                )
-                            ) {
-
-                                aRtoBasis.push({
-                                    key: oRegion.rtoBasis,
-                                    text: oRegion.rtoBasis
-                                });
-
-                            }
-
-                        });
-
-
-                        // ---------------------------------------------
-                        // FILTER MODEL
-                        // ---------------------------------------------
-
-                        const oFilterModel = new JSONModel({
-
-                            regionCodes: aRegionCodes,
-
-                            regionNames: aRegionNames,
-
-                            rtoBasis: aRtoBasis
-
-                        });
-
-
-                        this.getView().setModel(
-                            oFilterModel,
-                            "filter"
-                        );
-
-                    }.bind(this))
-
-                    .catch(function () {
-
-                        MessageBox.error(
-                            "Failed to load filter values."
-                        );
-
-                    });
+                this._loadFilterValues();
 
             },
 
@@ -174,94 +60,45 @@ sap.ui.define([
 
 
             // =========================================================
-            // CREATE REGION
+            // ADD ROW (inline, replaces the old dialog)
             // =========================================================
 
-            // onAdd: function () {
+            onAddRow: function () {
 
-            //     // Clear edit mode
-            //     this._oEditContext = null;
+                const oBinding =
+                    this.byId("regionTable")
+                        .getBinding("items");
 
+                // create(initialData, bSkipRefresh, bAtEnd)
+                oBinding.create({
 
-            //     // Clear fields
-            //     this.byId("regionCodeInput")
-            //         .setValue("");
+                    regionCode: "",
 
-            //     this.byId("regionNameInput")
-            //         .setValue("");
+                    regionName: "",
 
-            //     this.byId("rtoBasisInput")
-            //         .setValue("");
+                    rtoBasis: "",
 
+                    status: "Draft"      // draft by default
 
-            //     // Region Code can be entered
-            //     this.byId("regionCodeInput")
-            //         .setEditable(true);
-
-
-            //     // Dialog title
-            //     this.byId("regionDialog")
-            //         .setTitle("Add Region");
-
-
-            //     // Open dialog
-            //     this.byId("regionDialog")
-            //         .open();
-
-            // },
-
-            onAdd: function () {
-
-                // Clear edit mode
-                this._oEditContext = null;
-
-                // Clear fields
-                this.byId("regionCodeInput")
-                    .setValue("");
-
-                this.byId("idRegionNameInput")
-                    .setSelectedKey("");
-
-                this.byId("idRtoBasisInput")
-                    .setSelectedKey("");
-
-                // Region Code can be entered
-                this.byId("regionCodeInput")
-                    .setEditable(true);
-
-                // Dialog title
-                this.byId("regionDialog")
-                    .setTitle("Add Region");
-
-                // Open dialog
-                this.byId("regionDialog")
-                    .open();
-            },
-
-
-            // =========================================================
-            // CANCEL
-            // =========================================================
-
-            onCancel: function () {
-
-                this.byId("regionDialog")
-                    .close();
-
-                this._oEditContext = null;
+                }, true, false);         // add at the top
 
             },
 
 
             // =========================================================
-            // EDIT REGION
+            // EDIT ROW (inline, existing rows)
             // =========================================================
 
             onEdit: function (oEvent) {
 
-                const oContext =
+                // Button -> HBox -> ColumnListItem
+                const oItem =
                     oEvent.getSource()
-                        .getBindingContext();
+                        .getParent()
+                        .getParent();
+
+                const oContext =
+                    oItem.getBindingContext();
 
 
                 if (!oContext) {
@@ -269,352 +106,220 @@ sap.ui.define([
                 }
 
 
-                // Store context
-                this._oEditContext = oContext;
+                // new rows are already editable
+                if (oContext.isTransient()) {
+                    return;
+                }
 
 
-                // Get existing values
-                const sRegionCode =
-                    oContext.getProperty("regionCode");
-
-                const sRegionName =
-                    oContext.getProperty("regionName");
-
-                const sRtoBasis =
-                    oContext.getProperty("rtoBasis");
+                // already in edit mode
+                if (this._aEditContexts.indexOf(oContext) !== -1) {
+                    return;
+                }
 
 
-                // Fill dialog
-                // this.byId("regionCodeInput")
-                //     .setValue(sRegionCode || "");
+                this._aEditContexts.push(oContext);
 
-                // this.byId("regionNameInput")
-                //     .setValue(sRegionName || "");
+                this._toggleEditCells(oItem, true);
 
-                // this.byId("rtoBasisInput")
-                //     .setValue(sRtoBasis || "");
+            },
 
 
-                // Fill dialog
-                this.byId("regionCodeInput")
-                    .setValue(sRegionCode || "");
+            // Region Code (cell 0) is the key, so only
+            // Region Name (1) and RTO Basis (2) become editable
+            _toggleEditCells: function (oItem, bEdit) {
 
-                this.byId("idRegionNameInput")
-                    .setSelectedKey(sRegionName || "");
+                const aCells = oItem.getCells();
 
-                this.byId("idRtoBasisInput")
-                    .setSelectedKey(sRtoBasis || "");
+                [1, 2].forEach(function (iIndex) {
+
+                    const aChildren =
+                        aCells[iIndex].getItems();
+
+                    aChildren[0].setVisible(!bEdit);   // Text
+
+                    aChildren[1].setVisible(bEdit);    // Input / ComboBox
+
+                });
+
+            },
 
 
-                // Primary key cannot be changed
-                this.byId("regionCodeInput")
-                    .setEditable(false);
+            _exitEditMode: function () {
 
+                const aItems =
+                    this.byId("regionTable")
+                        .getItems();
 
-                // Dialog title
-                this.byId("regionDialog")
-                    .setTitle("Edit Region");
+                this._aEditContexts.forEach(function (oContext) {
 
+                    const oItem = aItems.find(function (oRow) {
+                        return oRow.getBindingContext() === oContext;
+                    });
 
-                // Open dialog
-                this.byId("regionDialog")
-                    .open();
+                    if (oItem) {
+                        this._toggleEditCells(oItem, false);
+                    }
+
+                }.bind(this));
+
+                this._aEditContexts = [];
 
             },
 
 
             // =========================================================
-            // SAVE REGION
+            // SUBMIT (footer)
             // =========================================================
 
-            // onSave: async function () {
+            onSubmit: async function () {
 
-            //     const sRegionCode =
-            //         this.byId("regionCodeInput")
-            //             .getValue()
-            //             .trim();
-
-            //     const sRegionName =
-            //         this.byId("regionNameInput")
-            //             .getValue()
-            //             .trim();
-
-            //     const sRtoBasis =
-            //         this.byId("rtoBasisInput")
-            //             .getValue()
-            //             .trim();
+                const oModel =
+                    this.getView()
+                        .getModel();
 
 
-            //     // =====================================================
-            //     // VALIDATION
-            //     // =====================================================
-
-            //     if (!sRegionCode) {
-
-            //         MessageBox.error(
-            //             "Region Code is required."
-            //         );
-
-            //         return;
-            //     }
+                const aNewContexts =
+                    this.byId("regionTable")
+                        .getBinding("items")
+                        .getAllCurrentContexts()
+                        .filter(function (oContext) {
+                            return oContext.isTransient();
+                        });
 
 
-            //     if (!sRegionName) {
+                if (
+                    aNewContexts.length === 0 &&
+                    this._aEditContexts.length === 0
+                ) {
 
-            //         MessageBox.error(
-            //             "Region Name is required."
-            //         );
+                    MessageToast.show(
+                        "Nothing to submit."
+                    );
 
-            //         return;
-            //     }
+                    return;
 
-
-            //     if (!sRtoBasis) {
-
-            //         MessageBox.error(
-            //             "RTO Basis is required."
-            //         );
-
-            //         return;
-            //     }
-
-
-            //     try {
-
-            //         // =================================================
-            //         // EDIT EXISTING REGION
-            //         // =================================================
-
-            //         if (this._oEditContext) {
-
-            //             this._oEditContext.setProperty(
-            //                 "regionName",
-            //                 sRegionName
-            //             );
-
-            //             this._oEditContext.setProperty(
-            //                 "rtoBasis",
-            //                 sRtoBasis
-            //             );
-
-
-            //             // Wait for update
-            //             await this._oEditContext
-            //                 .requestObject();
-
-
-            //             MessageToast.show(
-            //                 "Region updated successfully."
-            //             );
-
-            //         }
-
-
-            //         // =================================================
-            //         // CREATE NEW REGION
-            //         // =================================================
-
-            //         else {
-
-            //             const oModel =
-            //                 this.getView()
-            //                     .getModel();
-
-
-            //             const oListBinding =
-            //                 oModel.bindList(
-            //                     "/Regions"
-            //                 );
-
-
-            //             const oContext =
-            //                 oListBinding.create({
-
-            //                     regionCode:
-            //                         sRegionCode,
-
-            //                     regionName:
-            //                         sRegionName,
-
-            //                     rtoBasis:
-            //                         sRtoBasis
-
-            //                 });
-
-
-            //             // Wait for create
-            //             await oContext.created();
-
-
-            //             MessageToast.show(
-            //                 "Region created successfully."
-            //             );
-
-            //         }
-
-
-            //         // =================================================
-            //         // CLOSE DIALOG
-            //         // =================================================
-
-            //         this.byId("regionDialog")
-            //             .close();
-
-
-            //         // Clear edit context
-            //         this._oEditContext = null;
-
-
-            //         // Reload filter values
-            //         this._loadFilterValues();
-
-            //     }
-            //     catch (oError) {
-
-            //         MessageBox.error(
-            //             oError.message ||
-            //             "Failed to save Region."
-            //         );
-
-            //     }
-
-            // },
-
-            onSave: async function () {
-
-                const sRegionCode =
-                    this.byId("regionCodeInput")
-                        .getValue()
-                        .trim();
-
-                const sRegionName =
-                    this.byId("idRegionNameInput")
-                        .getSelectedKey();
-
-                const sRtoBasis =
-                    this.byId("idRtoBasisInput")
-                        .getSelectedKey();
+                }
 
 
                 // =====================================================
-                // VALIDATION
+                // VALIDATION - new rows
                 // =====================================================
 
-                if (!sRegionCode) {
+                const bNewInvalid =
+                    aNewContexts.some(function (oContext) {
+
+                        return (
+                            !(oContext.getProperty("regionCode") || "").trim() ||
+                            !oContext.getProperty("regionName") ||
+                            !oContext.getProperty("rtoBasis")
+                        );
+
+                    });
+
+
+                // =====================================================
+                // VALIDATION - edited rows
+                // =====================================================
+
+                const bEditInvalid =
+                    this._aEditContexts.some(function (oContext) {
+
+                        return (
+                            !oContext.getProperty("regionName") ||
+                            !oContext.getProperty("rtoBasis")
+                        );
+
+                    });
+
+
+                if (bNewInvalid || bEditInvalid) {
 
                     MessageBox.error(
-                        "Region Code is required."
+                        "Please fill all fields before submitting."
                     );
 
                     return;
+
                 }
 
 
-                if (!sRegionName) {
+                // =====================================================
+                // DUPLICATE REGION CODE (new rows)
+                // =====================================================
+
+                const aCodes =
+                    aNewContexts.map(function (oContext) {
+                        return oContext.getProperty("regionCode").trim();
+                    });
+
+
+                if (new Set(aCodes).size !== aCodes.length) {
 
                     MessageBox.error(
-                        "Region Name is required."
+                        "Duplicate Region Codes found in the new rows."
                     );
 
                     return;
+
                 }
 
 
-                if (!sRtoBasis) {
+                // =====================================================
+                // SAVE
+                // =====================================================
 
-                    MessageBox.error(
-                        "RTO Basis is required."
-                    );
+                this.getView().setBusy(true);
 
-                    return;
-                }
+
+                // Draft -> Submitted (new rows and edited rows)
+                const aSubmitContexts =
+                    aNewContexts.concat(this._aEditContexts);
+
+                aSubmitContexts.forEach(function (oContext) {
+                    oContext.setProperty("status", "Submitted");
+                });
+
+
+                // put the rows back to Draft if the save fails
+                const fnRevertStatus = function () {
+
+                    aNewContexts.forEach(function (oContext) {
+
+                        if (oContext.isTransient()) {
+                            oContext.setProperty("status", "Draft");
+                        }
+
+                    });
+
+                };
 
 
                 try {
 
-                    // =================================================
-                    // EDIT EXISTING REGION
-                    // =================================================
+                    await oModel.submitBatch(UPDATE_GROUP);
 
-                    if (this._oEditContext) {
 
-                        this._oEditContext.setProperty(
-                            "regionName",
-                            sRegionName
+                    // still pending => the backend rejected the request
+                    if (oModel.hasPendingChanges(UPDATE_GROUP)) {
+
+                        fnRevertStatus();
+
+                        MessageBox.error(
+                            this._getLastErrorMessage() ||
+                            "Save failed. Please check the Network tab."
                         );
 
-                        this._oEditContext.setProperty(
-                            "rtoBasis",
-                            sRtoBasis
-                        );
-
-
-                        // Wait for update
-                        await this._oEditContext
-                            .requestObject();
-
-
-                        MessageToast.show(
-                            "Region updated successfully."
-                        );
+                        return;
 
                     }
 
 
-                    // =================================================
-                    // CREATE NEW REGION
-                    // =================================================
+                    this._exitEditMode();
 
-                    else {
-
-                        const oModel =
-                            this.getView()
-                                .getModel();
-
-
-                        const oListBinding =
-                            oModel.bindList(
-                                "/Regions"
-                            );
-
-
-                        const oContext =
-                            oListBinding.create({
-
-                                regionCode:
-                                    sRegionCode,
-
-                                regionName:
-                                    sRegionName,
-
-                                rtoBasis:
-                                    sRtoBasis
-
-                            });
-
-
-                        // Wait for create
-                        await oContext.created();
-
-
-                        MessageToast.show(
-                            "Region created successfully."
-                        );
-
-                    }
-
-
-                    // =================================================
-                    // CLOSE DIALOG
-                    // =================================================
-
-                    this.byId("regionDialog")
-                        .close();
-
-
-                    // Clear edit context
-                    this._oEditContext = null;
-
+                    MessageToast.show(
+                        "Saved successfully."
+                    );
 
                     // Reload filter values
                     this._loadFilterValues();
@@ -622,15 +327,40 @@ sap.ui.define([
                 }
                 catch (oError) {
 
+                    fnRevertStatus();
+
                     MessageBox.error(
-                        oError.message ||
-                        "Failed to save Region."
+                        (oError && oError.message) ||
+                        "Failed to save Regions."
                     );
+
+                }
+                finally {
+
+                    this.getView().setBusy(false);
 
                 }
 
             },
 
+
+            // last backend error text from the message manager
+            _getLastErrorMessage: function () {
+
+                const aMessages =
+                    sap.ui.getCore()
+                        .getMessageManager()
+                        .getMessageModel()
+                        .getData()
+                        .filter(function (oMessage) {
+                            return oMessage.getType() === "Error";
+                        });
+
+                return aMessages.length
+                    ? aMessages[aMessages.length - 1].getMessage()
+                    : "";
+
+            },
 
 
             // =========================================================
@@ -646,6 +376,16 @@ sap.ui.define([
 
                 if (!oContext) {
                     return;
+                }
+
+
+                // new, unsaved row: just discard it
+                if (oContext.isTransient()) {
+
+                    oContext.delete("$auto");
+
+                    return;
+
                 }
 
 
@@ -680,7 +420,16 @@ sap.ui.define([
                             try {
 
                                 // Delete OData entity
-                                await oContext.delete();
+                                await oContext.delete("$auto");
+
+
+                                // drop from edit list if it was there
+                                this._aEditContexts =
+                                    this._aEditContexts.filter(
+                                        function (oCtx) {
+                                            return oCtx !== oContext;
+                                        }
+                                    );
 
 
                                 MessageToast.show(
@@ -746,39 +495,38 @@ sap.ui.define([
 
             onFilter: function () {
 
+                const oModel =
+                    this.getView()
+                        .getModel();
+
+
+                // V4 cannot filter while unsaved changes exist
+                if (oModel.hasPendingChanges(UPDATE_GROUP)) {
+
+                    MessageBox.warning(
+                        "Please submit or delete the unsaved rows before filtering."
+                    );
+
+                    return;
+
+                }
+
+
                 const aFilters = [];
 
-
-                // =====================================================
-                // REGION CODE
-                // =====================================================
 
                 const sRegionCode =
                     this.byId("regionCodeFilter")
                         .getSelectedKey();
 
-
-                // =====================================================
-                // REGION NAME
-                // =====================================================
-
                 const sRegionName =
                     this.byId("regionNameFilter")
                         .getSelectedKey();
-
-
-                // =====================================================
-                // RTO BASIS
-                // =====================================================
 
                 const sRtoBasis =
                     this.byId("rtoBasisFilter")
                         .getSelectedKey();
 
-
-                // =====================================================
-                // REGION CODE FILTER
-                // =====================================================
 
                 if (sRegionCode) {
 
@@ -793,10 +541,6 @@ sap.ui.define([
                 }
 
 
-                // =====================================================
-                // REGION NAME FILTER
-                // =====================================================
-
                 if (sRegionName) {
 
                     aFilters.push(
@@ -809,10 +553,6 @@ sap.ui.define([
 
                 }
 
-
-                // =====================================================
-                // RTO BASIS FILTER
-                // =====================================================
 
                 if (sRtoBasis) {
 
@@ -827,16 +567,9 @@ sap.ui.define([
                 }
 
 
-                // =====================================================
-                // APPLY FILTER
-                // =====================================================
-
-                const oTable =
-                    this.byId("regionTable");
-
-
                 const oBinding =
-                    oTable.getBinding("items");
+                    this.byId("regionTable")
+                        .getBinding("items");
 
 
                 if (oBinding) {
@@ -848,9 +581,9 @@ sap.ui.define([
                 }
 
 
-                // =====================================================
-                // MESSAGE
-                // =====================================================
+                // rows are re-rendered after filtering
+                this._aEditContexts = [];
+
 
                 if (aFilters.length === 0) {
 
@@ -876,6 +609,22 @@ sap.ui.define([
 
             onClearFilters: function () {
 
+                const oModel =
+                    this.getView()
+                        .getModel();
+
+
+                if (oModel.hasPendingChanges(UPDATE_GROUP)) {
+
+                    MessageBox.warning(
+                        "Please submit or delete the unsaved rows before clearing filters."
+                    );
+
+                    return;
+
+                }
+
+
                 this.byId("regionCodeFilter")
                     .setSelectedKey("");
 
@@ -886,12 +635,9 @@ sap.ui.define([
                     .setSelectedKey("");
 
 
-                const oTable =
-                    this.byId("regionTable");
-
-
                 const oBinding =
-                    oTable.getBinding("items");
+                    this.byId("regionTable")
+                        .getBinding("items");
 
 
                 if (oBinding) {
@@ -899,6 +645,9 @@ sap.ui.define([
                     oBinding.filter([]);
 
                 }
+
+
+                this._aEditContexts = [];
 
 
                 MessageToast.show(
@@ -922,10 +671,6 @@ sap.ui.define([
 
                 }
 
-
-                // =====================================================
-                // CHECKBOXES
-                // =====================================================
 
                 const oRegionCodeCheckBox =
                     new CheckBox({
@@ -957,10 +702,6 @@ sap.ui.define([
                     });
 
 
-                // =====================================================
-                // CONTENT
-                // =====================================================
-
                 const oContent =
                     new VBox({
 
@@ -985,10 +726,6 @@ sap.ui.define([
                     });
 
 
-                // =====================================================
-                // DIALOG
-                // =====================================================
-
                 this._oAdaptFilterDialog =
                     new Dialog({
 
@@ -997,6 +734,7 @@ sap.ui.define([
 
                         contentWidth:
                             "350px",
+
                         content:
                             [oContent],
 
@@ -1012,38 +750,22 @@ sap.ui.define([
                                 press:
                                     function () {
 
-                                        this
-                                            .byId(
-                                                "regionCodeFilter"
-                                            )
+                                        this.byId("regionCodeFilter")
                                             .setVisible(
-                                                oRegionCodeCheckBox
-                                                    .getSelected()
+                                                oRegionCodeCheckBox.getSelected()
                                             );
 
-
-                                        this
-                                            .byId(
-                                                "regionNameFilter"
-                                            )
+                                        this.byId("regionNameFilter")
                                             .setVisible(
-                                                oRegionNameCheckBox
-                                                    .getSelected()
+                                                oRegionNameCheckBox.getSelected()
                                             );
 
-
-                                        this
-                                            .byId(
-                                                "rtoBasisFilter"
-                                            )
+                                        this.byId("rtoBasisFilter")
                                             .setVisible(
-                                                oRtoBasisCheckBox
-                                                    .getSelected()
+                                                oRtoBasisCheckBox.getSelected()
                                             );
 
-
-                                        this
-                                            ._oAdaptFilterDialog
+                                        this._oAdaptFilterDialog
                                             .close();
 
                                     }.bind(this)
@@ -1059,8 +781,7 @@ sap.ui.define([
                                 press:
                                     function () {
 
-                                        this
-                                            ._oAdaptFilterDialog
+                                        this._oAdaptFilterDialog
                                             .close();
 
                                     }.bind(this)
@@ -1069,10 +790,6 @@ sap.ui.define([
 
                     });
 
-
-                // =====================================================
-                // ADD DIALOG TO VIEW
-                // =====================================================
 
                 this.getView()
                     .addDependent(
@@ -1109,6 +826,7 @@ sap.ui.define([
 
                 oBinding
                     .requestContexts(0, 1000)
+
                     .then(function (aContexts) {
 
                         const aRegions =
@@ -1124,101 +842,34 @@ sap.ui.define([
                         const aRtoBasis = [];
 
 
+                        // unique key/text pairs
+                        const fnAddUnique = function (aTarget, sValue) {
+
+                            if (
+                                sValue &&
+                                !aTarget.some(function (oItem) {
+                                    return oItem.key === sValue;
+                                })
+                            ) {
+
+                                aTarget.push({
+                                    key: sValue,
+                                    text: sValue
+                                });
+
+                            }
+
+                        };
+
+
                         aRegions.forEach(
                             function (oRegion) {
 
+                                fnAddUnique(aRegionCodes, oRegion.regionCode);
 
-                                // -------------------------------------
-                                // REGION CODE
-                                // -------------------------------------
+                                fnAddUnique(aRegionNames, oRegion.regionName);
 
-                                if (
-                                    oRegion.regionCode &&
-                                    !aRegionCodes.some(
-                                        function (oItem) {
-
-                                            return (
-                                                oItem.key ===
-                                                oRegion.regionCode
-                                            );
-
-                                        }
-                                    )
-                                ) {
-
-                                    aRegionCodes.push({
-
-                                        key:
-                                            oRegion.regionCode,
-
-                                        text:
-                                            oRegion.regionCode
-
-                                    });
-
-                                }
-
-
-                                // -------------------------------------
-                                // REGION NAME
-                                // -------------------------------------
-
-                                if (
-                                    oRegion.regionName &&
-                                    !aRegionNames.some(
-                                        function (oItem) {
-
-                                            return (
-                                                oItem.key ===
-                                                oRegion.regionName
-                                            );
-
-                                        }
-                                    )
-                                ) {
-
-                                    aRegionNames.push({
-
-                                        key:
-                                            oRegion.regionName,
-
-                                        text:
-                                            oRegion.regionName
-
-                                    });
-
-                                }
-
-
-                                // -------------------------------------
-                                // RTO BASIS
-                                // -------------------------------------
-
-                                if (
-                                    oRegion.rtoBasis &&
-                                    !aRtoBasis.some(
-                                        function (oItem) {
-
-                                            return (
-                                                oItem.key ===
-                                                oRegion.rtoBasis
-                                            );
-
-                                        }
-                                    )
-                                ) {
-
-                                    aRtoBasis.push({
-
-                                        key:
-                                            oRegion.rtoBasis,
-
-                                        text:
-                                            oRegion.rtoBasis
-
-                                    });
-
-                                }
+                                fnAddUnique(aRtoBasis, oRegion.rtoBasis);
 
                             }
                         );

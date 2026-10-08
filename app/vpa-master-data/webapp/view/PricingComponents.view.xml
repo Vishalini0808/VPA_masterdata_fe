@@ -297,12 +297,6 @@
                                     tooltip="Delete"
                                     press=".onDelete"/>
 
-                                <Button
-                                    icon="sap-icon://navigation-right-arrow"
-                                    type="Transparent"
-                                    tooltip="View Details"
-                                    press=".onView"/>
-
                             </HBox>
 
                         </cells>
