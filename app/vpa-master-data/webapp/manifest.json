@@ -83,7 +83,7 @@
         "preload": true,
         "settings": {
           "operationMode": "Server",
-          "autoExpandSelect": true,
+          "autoExpandSelect": false,
           "earlyRequests": true
         }
       }
@@ -147,6 +147,11 @@
           "name": "mtoConfigurations",
           "pattern": "mtoConfigurations",
           "target": "mtoConfigurations"
+        },
+        {
+          "name": "MTOConfigurationObject",
+          "pattern": "MTOConfiguration/{mtoModelCode}",
+          "target": "MTOConfigurationObject"
         }
       ],
       "targets": {
@@ -181,6 +186,11 @@
         "mtoConfigurations": {
           "id": "MTOConfigurations",
           "name": "MTOConfigurations"
+        },
+        "MTOConfigurationObject": {
+          "id": "MTOConfigurationObject",
+          "viewType": "XML",
+          "viewName": "MTOConfigurationObject"
         }
       }
     },

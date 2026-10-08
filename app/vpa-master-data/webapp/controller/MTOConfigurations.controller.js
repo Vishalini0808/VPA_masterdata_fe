@@ -576,6 +576,30 @@ sap.ui.define([
                     this._oAdaptFilterDialog.destroy();
                     this._oAdaptFilterDialog = null;
                 }
+            },
+
+
+            onConfigurationPress: function (oEvent) {
+
+
+                const oContext =
+                    oEvent.getSource().getBindingContext();
+
+                const sMTOModelCode =
+                    oContext.getProperty("mtoModelCode");
+
+                this.getOwnerComponent()
+                    .getRouter()
+                    .navTo(
+                        "MTOConfigurationObject",
+                        {
+                            mtoModelCode: encodeURIComponent(
+                                sMTOModelCode
+                            )
+                        }
+                    );
+
+
             }
 
         }

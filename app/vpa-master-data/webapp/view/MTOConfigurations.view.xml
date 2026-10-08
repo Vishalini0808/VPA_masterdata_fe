@@ -141,7 +141,10 @@
 
                 <items>
 
-                    <ColumnListItem>
+                    <ColumnListItem
+                    type="Navigation"
+                    press=".onConfigurationPress">
+
 
                         <cells>
 

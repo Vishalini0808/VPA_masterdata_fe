@@ -131,7 +131,8 @@ onClearFilter: function () {
 
                     this._oValidFromInput = new DatePicker({
                         valueFormat: "yyyy-MM-dd",
-                        displayFormat: "dd-MMM-yyyy"
+                        displayFormat: "dd-MMM-yyyy",
+                        minDate: new Date()
                     });
 
                     this._oDescriptionInput = new Input();

@@ -1,0 +1,244 @@
+<mvc:View
+    controllerName="vpamasterdata.controller.MTOConfigurationObject"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.uxap"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core">
+
+    <f:ObjectPageLayout
+        id="mtoObjectPage"
+        showTitleInHeaderContent="true">
+
+        <!-- ================================================= -->
+        <!-- HEADER -->
+        <!-- ================================================= -->
+
+        <f:headerTitle>
+
+            <f:ObjectPageDynamicHeaderTitle>
+
+                <f:expandedHeading>
+
+                    <Title
+                        text="{mtoModelCode}"
+                        wrapping="true"/>
+
+                </f:expandedHeading>
+
+                <f:snappedHeading>
+
+                    <Title
+                        text="{mtoModelCode}"/>
+
+                </f:snappedHeading>
+
+                <f:actions>
+
+                    <Button
+                        text="Edit"
+                        icon="sap-icon://edit"
+                        type="Emphasized"
+                        press=".onEdit"/>
+
+                    <Button
+                        text="Delete"
+                        icon="sap-icon://delete"
+                        type="Transparent"
+                        press=".onDelete"/>
+
+                </f:actions>
+
+            </f:ObjectPageDynamicHeaderTitle>
+
+        </f:headerTitle>
+
+
+        <!-- ================================================= -->
+        <!-- HEADER CONTENT -->
+        <!-- ================================================= -->
+
+        <f:headerContent>
+
+            <VBox class="sapUiSmallMarginEnd">
+
+                <Label text="Reference MTS Model"/>
+
+                <ObjectStatus
+                    text="{referenceMTSModel_modelCode}"
+                    icon="sap-icon://product"/>
+
+            </VBox>
+
+
+            <VBox>
+
+                <Label text="Valid From"/>
+
+                <ObjectStatus
+                    text="{validFrom}"
+                    icon="sap-icon://calendar"/>
+
+            </VBox>
+
+        </f:headerContent>
+
+
+        <!-- ================================================= -->
+        <!-- CONFIGURATION DETAILS -->
+        <!-- ================================================= -->
+
+        <f:sections>
+
+            <f:ObjectPageSection
+                title="Configuration Details">
+
+                <f:subSections>
+
+                    <f:ObjectPageSubSection>
+
+                        <f:blocks>
+
+                            <form:SimpleForm
+                                editable="false"
+                                layout="ResponsiveGridLayout">
+
+                                <Label text="MTO Model Code"/>
+
+                                <Text text="{mtoModelCode}"/>
+
+
+                                <Label text="Reference MTS Model"/>
+
+                                <Text
+                                    text="{referenceMTSModel_modelCode}"/>
+
+
+                                <Label text="Valid From"/>
+
+                                <Text text="{validFrom}"/>
+
+                            </form:SimpleForm>
+
+                        </f:blocks>
+
+                    </f:ObjectPageSubSection>
+
+                </f:subSections>
+
+            </f:ObjectPageSection>
+
+
+            <!-- ================================================= -->
+            <!-- PARTS -->
+            <!-- ================================================= -->
+
+            <f:ObjectPageSection
+                title="Parts">
+
+                <f:subSections>
+
+                    <f:ObjectPageSubSection>
+
+                        <f:blocks>
+
+                            <Table
+    id="mtoPartsTable"
+    updateFinished=".onTableUpdateFinished"
+    items="{
+        path: 'parts',
+        parameters: {
+            $expand: 'part',
+            $$ownRequest: true,
+            $$updateGroupId: 'partsGroup'
+        }
+    }"
+    growing="true"
+    growingThreshold="10">
+
+    <headerToolbar>
+    <OverflowToolbar>
+        <Title text="MTO Parts" level="H3"/>
+        <ToolbarSpacer/>
+        <ObjectNumber
+            number="{viewModel>/grandTotal}"
+            unit="Grand Total"
+            emphasized="true"/>
+        <Button text="Add Part" icon="sap-icon://add" press=".onAddPart"/>
+        <Button text="Save" type="Emphasized" press=".onSaveParts"/>
+        <Button text="Cancel" type="Transparent" press=".onCancelParts"/>
+    </OverflowToolbar>
+</headerToolbar>
+
+    <columns>
+    <Column width="14rem"><Text text="Part"/></Column>
+    <Column><Text text="Description"/></Column>
+    <Column width="8rem" hAlign="End"><Text text="MIY Cost"/></Column>
+    <Column width="8rem" hAlign="End"><Text text="MIY Markup"/></Column>
+    <Column width="9rem"><Text text="Price Indicator"/></Column>
+    <Column width="8rem" hAlign="End"><Text text="Unit Price"/></Column>
+    <Column width="7rem"><Text text="Quantity"/></Column>
+    <Column width="9rem" hAlign="End"><Text text="Line Total"/></Column>
+    <Column width="4rem"/>
+</columns>
+
+    <items>
+        <ColumnListItem>
+            <cells>
+
+                <ComboBox
+                    width="100%"
+                    placeholder="Select part"
+                    selectedKey="{part_partCode}"
+                    selectionChange=".onPartChange"
+                    showSecondaryValues="true"
+                    filterSecondaryValues="true"
+                    items="{ path: '/Parts', templateShareable: true }">
+                    <core:ListItem
+                        key="{partCode}"
+                        text="{partCode}"
+                        additionalText="{description}"/>
+                </ComboBox>
+
+                <Text text="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtDescription'}"/>
+                <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtMiyCost'}"/>
+                <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtMiyMarkup'}"/>
+                <Text text="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtPriceIndicator'}"/>
+
+                <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtUnitPrice'}"/>
+
+                <Input
+                    value="{quantity}"
+                    type="Number"
+                    width="6rem"
+                    enabled="{= !!${part_partCode} }"
+                    change=".onQuantityChange"/>
+
+                <ObjectNumber
+                    emphasized="true"
+                    number="{parts:[{path:'part_partCode'},{path:'quantity'},{path:'partsLookup>/'}], formatter:'.fmtLineTotal'}"/>
+
+                <Button
+                    icon="sap-icon://delete"
+                    type="Transparent"
+                    tooltip="Delete"
+                    press=".onDeletePart"/>
+
+            </cells>
+        </ColumnListItem>
+    </items>
+</Table>
+
+                        </f:blocks>
+
+                    </f:ObjectPageSubSection>
+
+                </f:subSections>
+
+            </f:ObjectPageSection>
+
+        </f:sections>
+
+    </f:ObjectPageLayout>
+
+</mvc:View>
