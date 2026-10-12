@@ -3,312 +3,373 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core">
-
+ 
     <Page
-        title="Pricing Components"
-        showNavButton="true"
-        navButtonPress=".onNavBack">
-
+        id="pricingPage"
+        class="vpaPage"
+        backgroundDesign="Transparent"
+        enableScrolling="true">
+ 
+        <customHeader>
+<Bar class="vpaHeader">
+<contentLeft>
+<Button
+                        icon="sap-icon://nav-back"
+                        type="Transparent"
+                        tooltip="Back"
+                        press=".onNavBack"/>
+<Title text="Pricing Components" level="H1"/>
+</contentLeft>
+</Bar>
+</customHeader>
+ 
         <content>
-
-            <!-- ================================================= -->
-            <!-- FILTER AREA -->
-            <!-- ================================================= -->
-
-            <VBox>
-
+ 
+            <!-- ================= FILTERS ================= -->
+<Panel
+                class="vpaCard sapUiSmallMargin"
+                headerText="Filters"
+                expandable="true"
+                expanded="true"
+                backgroundDesign="Solid">
+ 
                 <HBox
-                    class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginTop"
-                    justifyContent="SpaceBetween">
-
-                    <!-- Region Code -->
-
-                    <VBox width="31%">
-
-                        <Label text="Region Code"/>
-
-                        <Select
+                    alignItems="End"
+                    wrap="Wrap"
+                    class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom">
+ 
+                    <VBox class="sapUiMediumMarginEnd">
+<Label text="Region Code" design="Bold"/>
+<ComboBox
                             id="regionCodeFilterPC"
-                            width="100%"
-                            forceSelection="false"
-                            items="{/Regions}">
-
-                            <core:Item
-                                key="{regionCode}"
-                                text="{regionCode}"/>
-
-                        </Select>
-
-                    </VBox>
-
-
-                    <!-- Engine Type -->
-
-                    <VBox width="31%">
-
-                        <Label text="Engine Type"/>
-
-                        <Select
+                            width="16rem"
+                            placeholder="Select Region Code"
+                            items="{filter>/regionCodes}">
+<core:Item key="{filter>key}" text="{filter>text}"/>
+</ComboBox>
+</VBox>
+ 
+                    <VBox class="sapUiMediumMarginEnd">
+<Label text="Engine Type" design="Bold"/>
+<ComboBox
                             id="engineTypeFilterPC"
-                            width="100%"
-                            forceSelection="false"
-                            >
-
-                            <core:Item
-                                key="Petrol"
-                                text="Petrol"/>
-
-                            <core:Item
-                                key="EV"
-                                text="EV"/>
-
-                        </Select>
-
-                    </VBox>
-
-
-                    <!-- Approval Status -->
-
-                    <VBox width="31%">
-
-                        <Label text="Approval Status"/>
-
-                        <Select
+                            width="12rem"
+                            placeholder="Select Engine Type">
+<core:Item key="Petrol" text="Petrol"/>
+<core:Item key="EV" text="EV"/>
+</ComboBox>
+</VBox>
+ 
+                    <VBox class="sapUiMediumMarginEnd">
+<Label text="Approval Status" design="Bold"/>
+<ComboBox
                             id="approvalStatusFilterPC"
-                            width="100%"
-                            forceSelection="false"
-                            >
-
-                            <core:Item
-                                key="DRAFT"
-                                text="DRAFT"/>
-
-                            <core:Item
-                                key="SUBMITTED"
-                                text="SUBMITTED"/>
-
-                            <core:Item
-                                key="APPROVED"
-                                text="APPROVED"/>
-
-                            <core:Item
-                                key="REJECTED"
-                                text="REJECTED"/>
-
-                        </Select>
-
-                    </VBox>
-
-                </HBox>
-
-
-                <!-- ================================================= -->
-                <!-- FILTER BUTTONS -->
-                <!-- ================================================= -->
-
-                <HBox
-                    justifyContent="End"
-                    class="sapUiSmallMarginEnd sapUiSmallMarginTop sapUiSmallMarginBottom">
-
+                            width="12rem"
+                            placeholder="Select Status">
+<core:Item key="DRAFT" text="DRAFT"/>
+<core:Item key="SUBMITTED" text="SUBMITTED"/>
+<core:Item key="APPROVED" text="APPROVED"/>
+<core:Item key="REJECTED" text="REJECTED"/>
+</ComboBox>
+</VBox>
+ 
                     <Button
-                        text="Go"
-                        icon="sap-icon://filter"
+                        text="Search"
+                        icon="sap-icon://search"
                         type="Emphasized"
                         press=".onGoFilter"/>
-
-                    <Button
+<Button
                         text="Clear"
                         icon="sap-icon://clear-filter"
-                        type="Transparent"
                         class="sapUiTinyMarginBegin"
                         press=".onClearFilter"/>
-
-                    <Button
-                        text="Adapt Filters"
+</HBox>
+</Panel>
+ 
+            <!-- ================= TABLE ================= -->
+<VBox class="vpaCard vpaTableCard sapUiSmallMargin">
+ 
+                <!-- title bar: outside the scroll container, so it does not scroll -->
+<OverflowToolbar>
+<Title
+                        text="{= 'Pricing Components (' + ${viewModel>/count} + ')' }"
+                        level="H2"/>
+<ToolbarSpacer/>
+<Button
+                        text="Add Row"
+                        icon="sap-icon://add"
+                        type="Emphasized"
+                        press=".onAddRow"/>
+<Button
+                        text="Refresh"
+                        icon="sap-icon://refresh"
                         type="Transparent"
-                        class="sapUiTinyMarginBegin"
-                        press=".onAdaptFilters"/>
-
-                </HBox>
-
-            </VBox>
-
-
-            <!-- ================================================= -->
-            <!-- PRICING COMPONENTS TABLE -->
-            <!-- ================================================= -->
-
-            <Table
-                id="pricingComponentsTable"
-                items="{/PricingComponents}"
-                growing="true"
-                growingThreshold="20"
-                mode="MultiSelect"
-                includeItemInSelection="true">
-
-                <headerToolbar>
-
-                    <Toolbar>
-
-                        <Title
-                            text="Pricing Components"
-                            level="H2"/>
-
-                        <ToolbarSpacer/>
-
-                        <Button
-                            text="Create"
-                            icon="sap-icon://add"
-                            type="Emphasized"
-                            press=".onAdd"/>
-
-                    </Toolbar>
-
-                </headerToolbar>
-
-
-                <!-- ================================================= -->
-                <!-- COLUMNS -->
-                <!-- ================================================= -->
-
-                <columns>
-
-                    <Column>
-                        <Text text="Region Code"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Engine Type"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Valid From"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Helmet"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Transportation"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Helmet Margin"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Other Expenses &lt; 500"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Other Expenses &gt; 500"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Insurance &lt; 350"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Insurance &gt; 350"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="TPA/PA &lt; 350"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="TPA/PA &gt; 350"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="No Plate Charges"/>
-                    </Column>
-
-                    <Column>
-                        <Text text="Approval Status"/>
-                    </Column>
-
-                    <Column
-                        width="8rem"
-                        hAlign="Center">
-
-                        <Text text="Actions"/>
-
-                    </Column>
-
-                </columns>
-
-
-                <!-- ================================================= -->
-                <!-- ROWS -->
-                <!-- ================================================= -->
-
-                <items>
-
-                    <ColumnListItem>
-
-                        <cells>
-
-                            <Text text="{regionCode}"/>
-
-                            <Text text="{engineType}"/>
-
-                            <Text text="{validFrom}"/>
-
-                            <Text text="{helmet}"/>
-
-                            <Text text="{transportation}"/>
-
-                            <Text text="{helmetMargin}"/>
-
-                            <Text text="{otherExpensesBelow500}"/>
-
-                            <Text text="{otherExpensesAbove500}"/>
-
-                            <Text text="{insuranceRateBelow350}"/>
-
-                            <Text text="{insuranceRateAbove350}"/>
-
-                            <Text text="{tpaPaBelow350}"/>
-
-                            <Text text="{tpaPaAbove350}"/>
-
-                            <Text text="{noPlateCharges}"/>
-
-                            <ObjectStatus
-                                text="{approvalStatus}"/>
-
-
-                            <!-- Actions -->
-
-                            <HBox
-                                justifyContent="Center">
-
-                                <Button
-                                    icon="sap-icon://edit"
-                                    type="Transparent"
-                                    tooltip="Edit"
-                                    press=".onEdit"/>
-
-                                <Button
-                                    icon="sap-icon://delete"
-                                    type="Transparent"
-                                    tooltip="Delete"
-                                    press=".onDelete"/>
-
-                            </HBox>
-
-                        </cells>
-
-                    </ColumnListItem>
-
-                </items>
-
-            </Table>
-
-        </content>
-
+                        press=".onRefresh"/>
+</OverflowToolbar>
+ 
+                <ScrollContainer
+                    width="100%"
+                    horizontal="true"
+                    vertical="false">
+ 
+                    <Table
+                        id="pricingComponentsTable"
+                        class="vpaTable"
+                        items="{
+                            path: '/PricingComponents',
+                            parameters: { $$updateGroupId: 'pricingGroup', $count: true },
+                            sorter: { path: 'regionCode' }
+                        }"
+                        growing="true"
+                        growingThreshold="20"
+                        mode="MultiSelect"
+                        updateFinished=".onTableUpdateFinished">
+ 
+                        <columns>
+<Column width="9rem"  hAlign="Begin"  vAlign="Middle"><Text text="Region Code"/></Column>
+<Column width="8rem"  hAlign="Begin"  vAlign="Middle"><Text text="Engine"/></Column>
+<Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Valid From"/></Column>
+<Column width="8rem"  hAlign="End"    vAlign="Middle"><Text text="Helmet"/></Column>
+<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Transportation"/></Column>
+<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Helmet Margin"/></Column>
+<Column width="10rem" hAlign="End"    vAlign="Middle"><Text text="Other Exp. &lt; 500"/></Column>
+<Column width="10rem" hAlign="End"    vAlign="Middle"><Text text="Other Exp. &gt; 500"/></Column>
+<Column width="10rem" hAlign="End"    vAlign="Middle"><Text text="Insurance &lt; 350"/></Column>
+<Column width="10rem" hAlign="End"    vAlign="Middle"><Text text="Insurance &gt; 350"/></Column>
+<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="TPA/PA &lt; 350"/></Column>
+<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="TPA/PA &gt; 350"/></Column>
+<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="No Plate Charges"/></Column>
+<Column width="10rem" hAlign="Center" vAlign="Middle"><Text text="Approval Status"/></Column>
+<Column width="7rem"  hAlign="Center" vAlign="Middle"><Text text="Actions"/></Column>
+</columns>
+ 
+                        <!-- cells 2..12 are VBox [Text, editor]; the text shows in display mode,
+                             the editor in edit mode (new rows are always in edit mode) -->
+<items>
+<ColumnListItem vAlign="Middle">
+<cells>
+ 
+                                    <!-- 0 REGION CODE (key: editable only on new rows) -->
+<VBox>
+<Text
+                                            text="{regionCode}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{regionCode}"
+                                            placeholder="Region code"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 1 ENGINE TYPE (key: editable only on new rows) -->
+<VBox>
+<Text
+                                            text="{engineType}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Select
+                                            selectedKey="{engineType}"
+                                            width="100%"
+                                            visible="{= !!%{@$ui5.context.isTransient} }">
+<core:Item key="Petrol" text="Petrol"/>
+<core:Item key="EV" text="EV"/>
+</Select>
+</VBox>
+ 
+                                    <!-- 2 VALID FROM -->
+<VBox>
+<Text
+                                            text="{validFrom}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<DatePicker
+                                            value="{validFrom}"
+                                            width="100%"
+                                            valueFormat="yyyy-MM-dd"
+                                            displayFormat="dd-MM-yyyy"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 3 HELMET -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{helmet}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{helmet}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 4 TRANSPORTATION -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{transportation}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{transportation}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 5 HELMET MARGIN -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{helmetMargin}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{helmetMargin}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 6 OTHER EXPENSES BELOW 500 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{otherExpensesBelow500}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{otherExpensesBelow500}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 7 OTHER EXPENSES ABOVE 500 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{otherExpensesAbove500}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{otherExpensesAbove500}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 8 INSURANCE RATE BELOW 350 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{insuranceRateBelow350}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{insuranceRateBelow350}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 9 INSURANCE RATE ABOVE 350 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{insuranceRateAbove350}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{insuranceRateAbove350}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 10 TPA/PA BELOW 350 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{tpaPaBelow350}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{tpaPaBelow350}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 11 TPA/PA ABOVE 350 -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{tpaPaAbove350}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{tpaPaAbove350}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 12 NO PLATE CHARGES -->
+<VBox>
+<Text
+                                            width="100%"
+                                            textAlign="End"
+                                            text="{noPlateCharges}"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Input
+                                            value="{noPlateCharges}"
+                                            type="Number"
+                                            textAlign="End"
+                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</VBox>
+ 
+                                    <!-- 13 APPROVAL STATUS (set by the system) -->
+<ObjectStatus
+                                        text="{approvalStatus}"
+                                        state="{= ${approvalStatus} === 'DRAFT' ? 'Warning' : ${approvalStatus} === 'REJECTED' ? 'Error' : ${approvalStatus} === 'APPROVED' ? 'Success' : 'Information' }"/>
+ 
+                                    <!-- 14 ACTIONS (edit only makes sense on saved rows) -->
+<HBox justifyContent="Center">
+<Button
+                                            icon="sap-icon://edit"
+                                            type="Transparent"
+                                            tooltip="Edit"
+                                            press=".onEdit"
+                                            visible="{= !%{@$ui5.context.isTransient} }"/>
+<Button
+                                            icon="sap-icon://delete"
+                                            type="Transparent"
+                                            tooltip="Delete"
+                                            press=".onDelete"/>
+</HBox>
+ 
+                                </cells>
+</ColumnListItem>
+</items>
+</Table>
+ 
+                </ScrollContainer>
+</VBox>
+</content>
+ 
+        <footer>
+<OverflowToolbar>
+<ToolbarSpacer/>
+<Button
+                    text="Cancel"
+                    type="Transparent"
+                    press=".onCancel"/>
+<Button
+                    text="Submit"
+                    type="Emphasized"
+                    press=".onSubmit"/>
+</OverflowToolbar>
+</footer>
+ 
     </Page>
-
+ 
 </mvc:View>

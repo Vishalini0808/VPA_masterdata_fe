@@ -7,17 +7,25 @@ modules:
 
   - name: VPA_fe
     type: html5
-    path: app
+    path: app/vpa-master-data
     build-parameters:
       builder: custom
       commands:
         - npm install
         - npm run build:cf
       build-result: dist
-      supported-platforms: []
+      supported-platforms:
+        []
 
-resources: []
+resources:
+  []
 
 parameters:
   deploy_mode: html5-repo
   enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production

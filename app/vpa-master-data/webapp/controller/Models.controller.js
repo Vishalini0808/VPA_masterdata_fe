@@ -4,746 +4,385 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/FilterType"
-], function (
-    Controller,
-    MessageToast,
-    MessageBox,
-    Filter,
-    FilterOperator,
-    FilterType
-) {
+    "sap/ui/model/FilterType",
+    "sap/ui/model/json/JSONModel"
+], function (Controller, MessageToast, MessageBox, Filter, FilterOperator, FilterType, JSONModel) {
 
     "use strict";
 
-    return Controller.extend(
-        "vpamasterdata.controller.Models",
-        {
-
-
-            onInit: function () {
-
-                this._isEditMode = false;
-                this._oEditContext = null;
-
-                // this._loadFilterValues();
-
-
-            },
-
-
-            onNavBack: function () {
-
-                this.getOwnerComponent()
-                    .getRouter()
-                    .navTo("RouteView1");
-            },
-
-
-
-            onGoFilter: function () {
-
-                const oTable = this.byId("modelTable");
-                const oBinding = oTable.getBinding("items");
-
-                const aFilters = [];
-
-                // Model Code
-                const sModelCode =
-                    this.byId("modelCodeFilter").getSelectedKey();
-
-                console.log("Selected Model Code:", sModelCode);
-
-
-                if (sModelCode) {
-
-                    aFilters.push(
-                        new Filter(
-                            "modelCode",
-                            FilterOperator.EQ,
-                            sModelCode
-                        )
-                    );
-                }
-
-
-                // Model Description
-                const sDescription =
-                    this.byId("modelDescriptionFilter").getSelectedKey();
-
-                console.log("Selected Description:", sDescription);
-
-
-                if (sDescription) {
-
-                    aFilters.push(
-                        new Filter(
-                            "modelDescription",
-                            FilterOperator.EQ,
-                            sDescription
-                        )
-                    );
-                }
-
-
-                // Order Type
-                const sOrderType =
-                    this.byId("orderTypeFilter").getSelectedKey();
-
-                console.log("Selected Order Type:", sOrderType);
-
-
-                if (sOrderType) {
-
-                    aFilters.push(
-                        new Filter(
-                            "orderType",
-                            FilterOperator.EQ,
-                            sOrderType
-                        )
-                    );
-                }
-
-
-                console.log("Filters:", aFilters);
-
-
-                // Apply filters
-                oBinding.filter(
-                    aFilters,
-                    FilterType.Application
-                );
-            },
-
-
-            // =====================================================
-            // CLEAR FILTER
-            // =====================================================
-
-            onClearFilter: function () {
-
-                this.byId("modelCodeFilter")
-                    .setSelectedKey("");
-
-                this.byId("modelDescriptionFilter")
-                    .setSelectedKey("");
-
-                this.byId("orderTypeFilter")
-                    .setSelectedKey("");
-
-
-                const oBinding =
-                    this.byId("modelTable")
-                        .getBinding("items");
-
-
-                oBinding.filter(
-                    [],
-                    FilterType.Application
-                );
-            },
-
-            // =====================================================
-            // ADAPT FILTERS
-            // =====================================================
-
-            onAdaptFilters: function () {
-
-                MessageToast.show(
-                    "Adapt Filters can be configured here."
-                );
-
-            },
-
-
-            // =====================================================
-            // ADD MODEL
-            // =====================================================
-
-            onAdd: function () {
-
-                this._isEditMode = false;
-                this._oEditContext = null;
-
-
-                const oDialog =
-                    this.byId("modelDialog");
-
-
-                oDialog.setTitle(
-                    "Add Model"
-                );
-
-
-                // ---------------------------------------------
-                // RESET FIELDS
-                // ---------------------------------------------
-
-                this.byId("modelCodeInput")
-                    .setValue("");
-
-                this.byId("validFromInput")
-                    .setValue("");
-
-                this.byId("orderTypeInput")
-                    .setSelectedKey("MTS");
-
-                this.byId("modelDescriptionInput")
-                    .setValue("");
-
-                this.byId("engineTypeInput")
-                    .setSelectedKey("Petrol");
-
-                this.byId("ccWattInput")
-                    .setValue("");
-
-                this.byId("gstPercentInput")
-                    .setValue("");
-
-                this.byId("dealerMarginPercentInput")
-                    .setValue("");
-
-                this.byId("csdDiscountPercentInput")
-                    .setValue("");
-
-                this.byId("csdGstPercentInput")
-                    .setValue("");
-
-                this.byId("gemValueInput")
-                    .setValue("");
-
-                this.byId("statusInput")
-                    .setSelectedKey("ACTIVE");
-
-                this.byId("approvalStatusInput")
-                    .setSelectedKey("DRAFT");
-
-
-                // Model Code editable during create
-
-                this.byId("modelCodeInput")
-                    .setEnabled(true);
-
-
-                oDialog.open();
-
-            },
-
-
-            // =====================================================
-            // EDIT MODEL
-            // =====================================================
-
-            onEdit: function (oEvent) {
-
-                const oContext =
-                    oEvent
-                        .getSource()
-                        .getBindingContext();
-
-
-                if (!oContext) {
-
-                    MessageBox.error(
-                        "Unable to get selected model."
-                    );
-
-                    return;
-                }
-
-
-                this._isEditMode = true;
-                this._oEditContext = oContext;
-
-
-                const oData =
-                    oContext.getObject();
-
-
-                const oDialog =
-                    this.byId("modelDialog");
-
-
-                oDialog.setTitle(
-                    "Edit Model"
-                );
-
-
-                // ---------------------------------------------
-                // LOAD DATA
-                // ---------------------------------------------
-
-                this.byId("modelCodeInput")
-                    .setValue(
-                        oData.modelCode || ""
-                    );
-
-                this.byId("validFromInput")
-                    .setValue(
-                        oData.validFrom || ""
-                    );
-
-                this.byId("orderTypeInput")
-                    .setSelectedKey(
-                        oData.orderType || "MTS"
-                    );
-
-                this.byId("modelDescriptionInput")
-                    .setValue(
-                        oData.modelDescription || ""
-                    );
-
-                this.byId("engineTypeInput")
-                    .setSelectedKey(
-                        oData.engineType || "Petrol"
-                    );
-
-                this.byId("ccWattInput")
-                    .setValue(
-                        oData.ccWatt ?? ""
-                    );
-
-                this.byId("gstPercentInput")
-                    .setValue(
-                        oData.gstPercent ?? ""
-                    );
-
-                this.byId("dealerMarginPercentInput")
-                    .setValue(
-                        oData.dealerMarginPercent ?? ""
-                    );
-
-                this.byId("csdDiscountPercentInput")
-                    .setValue(
-                        oData.csdDiscountPercent ?? ""
-                    );
-
-                this.byId("csdGstPercentInput")
-                    .setValue(
-                        oData.csdGstPercent ?? ""
-                    );
-
-                this.byId("gemValueInput")
-                    .setValue(
-                        oData.gemValue ?? ""
-                    );
-
-                this.byId("statusInput")
-                    .setSelectedKey(
-                        oData.status || "ACTIVE"
-                    );
-
-                this.byId("approvalStatusInput")
-                    .setSelectedKey(
-                        oData.approvalStatus || "DRAFT"
-                    );
-
-
-                // Model Code should not be changed during edit
-
-                this.byId("modelCodeInput")
-                    .setEnabled(false);
-
-
-                oDialog.open();
-
-            },
-
-
-            // =====================================================
-            // CANCEL
-            // =====================================================
-
-            onCancel: function () {
-
-                this.byId("modelDialog")
-                    .close();
-
-            },
-
-
-            // =====================================================
-            // SAVE
-            // =====================================================
-
-            onSave: async function () {
-
-                const oModel =
-                    this.getView().getModel();
-
-
-                try {
-
-                    // ---------------------------------------------
-                    // READ VALUES
-                    // ---------------------------------------------
-
-                    const sModelCode =
-                        this.byId("modelCodeInput")
-                            .getValue()
-                            .trim();
-
-                    const sValidFrom =
-                        this.byId("validFromInput")
-                            .getValue();
-
-                    const sOrderType =
-                        this.byId("orderTypeInput")
-                            .getSelectedKey();
-
-                    const sDescription =
-                        this.byId("modelDescriptionInput")
-                            .getValue()
-                            .trim();
-
-                    const sEngineType =
-                        this.byId("engineTypeInput")
-                            .getSelectedKey();
-
-                    const sCCWatt =
-                        this.byId("ccWattInput")
-                            .getValue();
-
-                    const sGST =
-                        this.byId("gstPercentInput")
-                            .getValue();
-
-                    const sDealerMargin =
-                        this.byId("dealerMarginPercentInput")
-                            .getValue();
-
-                    const sCsdDiscount =
-                        this.byId("csdDiscountPercentInput")
-                            .getValue();
-
-                    const sCsdGst =
-                        this.byId("csdGstPercentInput")
-                            .getValue();
-
-                    const sGemValue =
-                        this.byId("gemValueInput")
-                            .getValue();
-
-                    const sStatus =
-                        this.byId("statusInput")
-                            .getSelectedKey();
-
-                    const sApprovalStatus =
-                        this.byId("approvalStatusInput")
-                            .getSelectedKey();
-
-
-                    // ---------------------------------------------
-                    // VALIDATION
-                    // ---------------------------------------------
-
-                    if (!sModelCode) {
-
-                        MessageBox.error(
-                            "Model Code is required."
-                        );
-
-                        return;
-                    }
-
-
-                    if (!sOrderType) {
-
-                        MessageBox.error(
-                            "Order Type is required."
-                        );
-
-                        return;
-                    }
-
-
-                    if (!sEngineType) {
-
-                        MessageBox.error(
-                            "Engine Type is required."
-                        );
-
-                        return;
-                    }
-
-
-                    // ---------------------------------------------
-                    // PAYLOAD
-                    // ---------------------------------------------
-
-                    const oPayload = {
-
-                        validFrom:
-                            sValidFrom || null,
-
-                        orderType:
-                            sOrderType,
-
-                        modelDescription:
-                            sDescription,
-
-                        engineType:
-                            sEngineType,
-
-                        ccWatt:
-                            sCCWatt !== ""
-                                ? Number(sCCWatt)
-                                : null,
-
-                        gstPercent:
-                            sGST !== ""
-                                ? Number(sGST)
-                                : null,
-
-                        dealerMarginPercent:
-                            sDealerMargin !== ""
-                                ? Number(sDealerMargin)
-                                : null,
-
-                        csdDiscountPercent:
-                            sCsdDiscount !== ""
-                                ? Number(sCsdDiscount)
-                                : null,
-
-                        csdGstPercent:
-                            sCsdGst !== ""
-                                ? Number(sCsdGst)
-                                : null,
-
-                        gemValue:
-                            sGemValue !== ""
-                                ? Number(sGemValue)
-                                : null,
-
-                        status:
-                            sStatus,
-
-                        approvalStatus:
-                            sApprovalStatus
-                    };
-
-
-                    // =================================================
-                    // EDIT
-                    // =================================================
-
-                    if (
-                        this._isEditMode &&
-                        this._oEditContext
-                    ) {
-
-                        const aProperties =
-                            Object.keys(oPayload);
-
-
-                        await Promise.all(
-                            aProperties.map(
-                                function (sProperty) {
-
-                                    return this._oEditContext
-                                        .setProperty(
-                                            sProperty,
-                                            oPayload[sProperty]
-                                        );
-
-                                }.bind(this)
-                            )
-                        );
-
-
-                        MessageToast.show(
-                            "Model updated successfully."
-                        );
-
-                    }
-
-
-                    // =================================================
-                    // CREATE
-                    // =================================================
-
-                    else {
-
-                        const oCreatePayload = {
-
-                            modelCode:
-                                sModelCode,
-
-                            ...oPayload
-                        };
-
-
-                        const oListBinding =
-                            oModel.bindList(
-                                "/Models"
-                            );
-
-
-                        const oContext =
-                            oListBinding.create(
-                                oCreatePayload
-                            );
-
-
-                        await oContext.created();
-
-
-                        MessageToast.show(
-                            "Model created successfully."
-                        );
-
-                    }
-
-
-                    // ---------------------------------------------
-                    // CLOSE
-                    // ---------------------------------------------
-
-                    this.byId("modelDialog")
-                        .close();
-
-
-                    // ---------------------------------------------
-                    // RESET EDIT STATE
-                    // ---------------------------------------------
-
-                    this._isEditMode = false;
-                    this._oEditContext = null;
-
-                }
-                catch (oError) {
-
-                    console.error(
-                        "MODEL SAVE ERROR:",
-                        oError
-                    );
-
-
-                    MessageBox.error(
-                        oError.message ||
-                        "Failed to save model."
-                    );
-
-                }
-
-            },
-
-
-            // =====================================================
-            // DELETE
-            // =====================================================
-
-            onDelete: function (oEvent) {
-
-                const oContext =
-                    oEvent
-                        .getSource()
-                        .getBindingContext();
-
-
-                if (!oContext) {
-
-                    MessageBox.error(
-                        "Unable to get selected model."
-                    );
-
-                    return;
-                }
-
-
-                const sModelCode =
-                    oContext.getProperty(
-                        "modelCode"
-                    );
-
-
-                MessageBox.confirm(
-
-                    "Are you sure you want to delete model " +
-                    sModelCode +
-                    "?",
-
-                    {
-
-                        title: "Delete Model",
-
-                        onClose: async function (sAction) {
-
-                            if (
-                                sAction !==
-                                MessageBox.Action.OK
-                            ) {
-                                return;
-                            }
-
-
-                            try {
-
-                                await oContext.delete();
-
-
-                                MessageToast.show(
-                                    "Model deleted successfully."
-                                );
-
-                            }
-                            catch (oError) {
-
-                                console.error(
-                                    "DELETE ERROR:",
-                                    oError
-                                );
-
-
-                                MessageBox.error(
-                                    oError.message ||
-                                    "Failed to delete model."
-                                );
-
-                            }
-
-                        }
-
-                    }
-
-                );
-
-            },
-
-
-            // =====================================================
-            // VIEW DETAILS
-            // =====================================================
-
-            onView: function (oEvent) {
-
-                const oContext =
-                    oEvent
-                        .getSource()
-                        .getBindingContext();
-
-
-                if (!oContext) {
-                    return;
-                }
-
-
-                const oData =
-                    oContext.getObject();
-
-
-                MessageToast.show(
-                    "Selected Model: " +
-                    oData.modelCode
-                );
-
-                // Later you can navigate to a Model
-                // Object Page from here.
-
+    // must match $$updateGroupId in the view
+    const UPDATE_GROUP = "modelGroup";
+
+    // properties the service expects as null, not "", when left empty
+    const EMPTY_AS_NULL = [
+        "validFrom", "ccWatt", "gstPercent", "dealerMarginPercent",
+        "csdDiscountPercent", "csdGstPercent", "gemValue"
+    ];
+
+    return Controller.extend("vpamasterdata.controller.Models", {
+
+        // =====================================================
+        // INIT
+        // =====================================================
+
+        onInit: function () {
+            // contexts of existing rows currently in edit mode
+            this._aEditContexts = [];
+
+            this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
+            this.getView().setModel(
+                new JSONModel({ modelCodes: [], descriptions: [] }),
+                "filter"
+            );
+
+            this._loadFilterValues();
+        },
+
+        onNavBack: function () {
+            this.getOwnerComponent().getRouter().navTo("RouteView1");
+        },
+
+        onTableUpdateFinished: function (oEvent) {
+            this.getView().getModel("viewModel")
+                .setProperty("/count", oEvent.getParameter("total") || 0);
+        },
+
+        onRefresh: function () {
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+                MessageBox.warning("Please submit or cancel the unsaved rows before refreshing.");
+                return;
+            }
+            this._aEditContexts = [];
+            this.byId("modelTable").getBinding("items").refresh();
+            this._loadFilterValues();
+        },
+
+        // =====================================================
+        // FILTER
+        // =====================================================
+
+        onGoFilter: function () {
+            // V4 cannot filter while unsaved changes exist
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+                MessageBox.warning("Please submit or cancel the unsaved rows before filtering.");
+                return;
             }
 
+            const aFilters = [];
+            const sModelCode = this.byId("modelCodeFilter").getSelectedKey();
+            const sDescription = this.byId("modelDescriptionFilter").getSelectedKey();
+            const sOrderType = this.byId("orderTypeFilter").getSelectedKey();
+
+            if (sModelCode) {
+                aFilters.push(new Filter("modelCode", FilterOperator.EQ, sModelCode));
+            }
+            if (sDescription) {
+                aFilters.push(new Filter("modelDescription", FilterOperator.EQ, sDescription));
+            }
+            if (sOrderType) {
+                aFilters.push(new Filter("orderType", FilterOperator.EQ, sOrderType));
+            }
+
+            this.byId("modelTable").getBinding("items").filter(aFilters, FilterType.Application);
+
+            // rows are re-rendered after filtering
+            this._aEditContexts = [];
+        },
+
+        onClearFilter: function () {
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+                MessageBox.warning("Please submit or cancel the unsaved rows before clearing filters.");
+                return;
+            }
+
+            this.byId("modelCodeFilter").setSelectedKey("");
+            this.byId("modelDescriptionFilter").setSelectedKey("");
+            this.byId("orderTypeFilter").setSelectedKey("");
+
+            this.byId("modelTable").getBinding("items").filter([], FilterType.Application);
+
+            this._aEditContexts = [];
+        },
+
+        // unique values for the code and description dropdowns
+        _loadFilterValues: function () {
+            const oModel = this.getOwnerComponent().getModel();
+            if (!oModel) { return; }
+
+            oModel.bindList("/Models", null, null, null, {
+                $select: "modelCode,modelDescription"
+            })
+                .requestContexts(0, 1000)
+                .then(function (aContexts) {
+                    const aModels = aContexts.map(function (oContext) {
+                        return oContext.getObject();
+                    });
+
+                    const fnUnique = function (sField) {
+                        return Array.from(new Set(
+                            aModels.map(function (oModel) { return oModel[sField]; })
+                                .filter(Boolean)
+                        )).sort().map(function (sValue) {
+                            return { key: sValue, text: sValue };
+                        });
+                    };
+
+                    this.getView().getModel("filter").setData({
+                        modelCodes: fnUnique("modelCode"),
+                        descriptions: fnUnique("modelDescription")
+                    });
+                }.bind(this))
+                .catch(function () {
+                    MessageBox.error("Failed to load filter values.");
+                });
+        },
+
+        // =====================================================
+        // ADD ROW (inline)
+        // =====================================================
+
+        onAddRow: function () {
+            const oBinding = this.byId("modelTable").getBinding("items");
+
+            // create(initialData, bSkipRefresh, bAtEnd)
+            oBinding.create({
+                modelCode: "",
+                validFrom: null,
+                orderType: "MTS",
+                modelDescription: "",
+                engineType: "Petrol",
+                ccWatt: null,
+                gstPercent: null,
+                dealerMarginPercent: null,
+                csdDiscountPercent: null,
+                csdGstPercent: null,
+                gemValue: null,
+                approvalStatus: "DRAFT"   // draft by default
+            }, true, false);              // add at the top
+        },
+
+        // =====================================================
+        // EDIT ROW (inline, existing rows)
+        // =====================================================
+
+        onEdit: function (oEvent) {
+            // Button -> HBox -> ColumnListItem
+            const oItem = oEvent.getSource().getParent().getParent();
+            const oContext = oItem.getBindingContext();
+
+            if (!oContext) {
+                MessageBox.error("Unable to get selected model.");
+                return;
+            }
+            if (oContext.isTransient()) { return; }                       // new rows are already editable
+            if (this._aEditContexts.indexOf(oContext) !== -1) { return; } // already in edit mode
+
+            this._aEditContexts.push(oContext);
+            this._toggleEditCells(oItem, true);
+        },
+
+        // Model Code (cell 0) is the key and Approval Status (11)
+        // is system controlled, so cells 1..10 become editable
+        _toggleEditCells: function (oItem, bEdit) {
+            const aCells = oItem.getCells();
+
+            for (let i = 1; i <= 10; i++) {
+                const aChildren = aCells[i].getItems();
+                aChildren[0].setVisible(!bEdit);   // Text
+                aChildren[1].setVisible(bEdit);    // Input / Select / DatePicker
+            }
+        },
+
+        _exitEditMode: function () {
+            const aItems = this.byId("modelTable").getItems();
+
+            this._aEditContexts.forEach(function (oContext) {
+                const oItem = aItems.find(function (oRow) {
+                    return oRow.getBindingContext() === oContext;
+                });
+                if (oItem) { this._toggleEditCells(oItem, false); }
+            }.bind(this));
+
+            this._aEditContexts = [];
+        },
+
+        // =====================================================
+        // CANCEL (footer): discard new rows and edits
+        // =====================================================
+
+        onCancel: function () {
+            const oModel = this.getView().getModel();
+
+            if (!oModel.hasPendingChanges(UPDATE_GROUP) && this._aEditContexts.length === 0) {
+                MessageToast.show("Nothing to cancel.");
+                return;
+            }
+
+            oModel.resetChanges(UPDATE_GROUP);
+            this._exitEditMode();
+            MessageToast.show("Changes discarded.");
+        },
+
+        // =====================================================
+        // SUBMIT (footer)
+        // =====================================================
+
+        onSubmit: async function () {
+            const oModel = this.getView().getModel();
+
+            const aNewContexts = this.byId("modelTable")
+                .getBinding("items")
+                .getAllCurrentContexts()
+                .filter(function (oContext) { return oContext.isTransient(); });
+
+            if (aNewContexts.length === 0 && this._aEditContexts.length === 0) {
+                MessageToast.show("Nothing to submit.");
+                return;
+            }
+
+            // ---------- validation ----------
+            const bNewInvalid = aNewContexts.some(function (oContext) {
+                return (
+                    !(oContext.getProperty("modelCode") || "").trim() ||
+                    !oContext.getProperty("orderType") ||
+                    !oContext.getProperty("engineType")
+                );
+            });
+
+            const bEditInvalid = this._aEditContexts.some(function (oContext) {
+                return (
+                    !oContext.getProperty("orderType") ||
+                    !oContext.getProperty("engineType")
+                );
+            });
+
+            if (bNewInvalid || bEditInvalid) {
+                MessageBox.error("Model Code, Order Type and Engine Type are required.");
+                return;
+            }
+
+            // duplicate Model Codes in the new rows
+            const aCodes = aNewContexts.map(function (oContext) {
+                return oContext.getProperty("modelCode").trim();
+            });
+
+            if (new Set(aCodes).size !== aCodes.length) {
+                MessageBox.error("Duplicate Model Codes found in the new rows.");
+                return;
+            }
+
+            // ---------- save ----------
+            this.getView().setBusy(true);
+
+            // DRAFT -> SUBMITTED (new rows and edited rows)
+            const aSubmitContexts = aNewContexts.concat(this._aEditContexts);
+            const mPrevious = new Map();
+
+            aSubmitContexts.forEach(function (oContext) {
+                // cleared inputs return "", but the service expects null
+                EMPTY_AS_NULL.forEach(function (sProperty) {
+                    if (oContext.getProperty(sProperty) === "") {
+                        oContext.setProperty(sProperty, null);
+                    }
+                });
+
+                mPrevious.set(oContext, oContext.getProperty("approvalStatus"));
+                oContext.setProperty("approvalStatus", "SUBMITTED");
+            });
+
+            // put the old value back if the save fails
+            const fnRevertStatus = function () {
+                mPrevious.forEach(function (sOld, oContext) {
+                    oContext.setProperty("approvalStatus", sOld || "DRAFT");
+                });
+            };
+
+            try {
+                await oModel.submitBatch(UPDATE_GROUP);
+
+                // still pending => the backend rejected the request
+                if (oModel.hasPendingChanges(UPDATE_GROUP)) {
+                    fnRevertStatus();
+                    MessageBox.error(
+                        this._getLastErrorMessage() ||
+                        "Save failed. Please check the Network tab."
+                    );
+                    return;
+                }
+
+                this._exitEditMode();
+                MessageToast.show("Saved successfully.");
+                this._loadFilterValues();
+            }
+            catch (oError) {
+                fnRevertStatus();
+                MessageBox.error(
+                    (oError && oError.message) || "Failed to save Models."
+                );
+            }
+            finally {
+                this.getView().setBusy(false);
+            }
+        },
+
+        // last backend error text from the message manager
+        _getLastErrorMessage: function () {
+            const aMessages = sap.ui.getCore()
+                .getMessageManager()
+                .getMessageModel()
+                .getData()
+                .filter(function (oMessage) {
+                    return oMessage.getType() === "Error";
+                });
+
+            return aMessages.length
+                ? aMessages[aMessages.length - 1].getMessage()
+                : "";
+        },
+
+        // =====================================================
+        // DELETE
+        // =====================================================
+
+        onDelete: function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext();
+
+            if (!oContext) {
+                MessageBox.error("Unable to get selected model.");
+                return;
+            }
+
+            // new, unsaved row: just discard it
+            if (oContext.isTransient()) {
+                oContext.delete("$auto");
+                return;
+            }
+
+            const sModelCode = oContext.getProperty("modelCode");
+
+            MessageBox.confirm("Are you sure you want to delete model " + sModelCode + "?", {
+                title: "Delete Model",
+
+                onClose: async function (sAction) {
+                    if (sAction !== MessageBox.Action.OK) { return; }
+
+                    try {
+                        // "$auto" = send immediately, do not wait for Submit
+                        await oContext.delete("$auto");
+
+                        // drop from edit list if it was there
+                        this._aEditContexts = this._aEditContexts.filter(function (oCtx) {
+                            return oCtx !== oContext;
+                        });
+
+                        MessageToast.show("Model deleted successfully.");
+                        this._loadFilterValues();
+                    }
+                    catch (oError) {
+                        MessageBox.error(oError.message || "Failed to delete model.");
+                    }
+                }.bind(this)
+            });
         }
-
-    );
-
+    });
 });

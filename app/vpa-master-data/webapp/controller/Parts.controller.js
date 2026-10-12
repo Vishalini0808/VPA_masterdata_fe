@@ -1,377 +1,560 @@
 sap.ui.define([
+
     "sap/ui/core/mvc/Controller",
-    "sap/m/Dialog",
-    "sap/m/Button",
-    "sap/m/Input",
-    "sap/m/Label",
-    "sap/ui/layout/form/SimpleForm",
+
     "sap/m/MessageToast",
+
     "sap/m/MessageBox",
-    "sap/m/DatePicker",
+
     "sap/ui/model/Filter",
+
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/FilterType"
-], function (
-    Controller,
-    Dialog,
-    Button,
-    Input,
-    Label,
-    SimpleForm,
-    MessageToast,
-    MessageBox,
-    DatePicker,
-    Filter,
-    FilterOperator,
-    FilterType
 
-) {
+    "sap/ui/model/FilterType",
 
+    "sap/ui/model/json/JSONModel"
+
+], function (Controller, MessageToast, MessageBox, Filter, FilterOperator, FilterType, JSONModel) {
+ 
     "use strict";
+ 
+    // must match $$updateGroupId in the view
 
-    return Controller.extend(
-        "vpamasterdata.controller.Parts",
-        {
+    const UPDATE_GROUP = "partGroup";
+ 
+    // properties the service expects as null, not "", when left empty
 
-            onNavBack: function () {
+    const EMPTY_AS_NULL = ["validFrom", "miyCost", "miyMarkup"];
+ 
+    return Controller.extend("vpamasterdata.controller.Parts", {
+ 
+        // =====================================================
 
-                this.getOwnerComponent()
-                    .getRouter()
-                    .navTo("RouteView1");
+        // INIT
 
-            },
+        // =====================================================
+ 
+        onInit: function () {
 
-            onAdd: function () {
+            // contexts of existing rows currently in edit mode
 
-                this._isEditMode = false;
-                this._oEditContext = null;
+            this._aEditContexts = [];
+ 
+            this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
 
-                this._openPartDialog("Add Part");
-            },
+            this.getView().setModel(
 
-            onEdit: function (oEvent) {
+                new JSONModel({ partCodes: [], descriptions: [] }),
 
-                const oContext = oEvent.getSource().getBindingContext();
-                const oData = oContext.getObject();
+                "filter"
 
-                this._isEditMode = true;
-                this._oEditContext = oContext;
+            );
+ 
+            this._loadFilterValues();
 
-                this._openPartDialog("Edit Part", oData);
-            },
+        },
+ 
+        onNavBack: function () {
 
+            this.getOwnerComponent().getRouter().navTo("RouteView1");
 
-            onGoFilter: function () {
+        },
+ 
+        onTableUpdateFinished: function (oEvent) {
 
-    const oTable = this.byId("partsTable");
-    const oBinding = oTable.getBinding("items");
+            this.getView().getModel("viewModel")
 
-    const aFilters = [];
+                .setProperty("/count", oEvent.getParameter("total") || 0);
 
-    const sPartCode =
-        this.byId("partCodeFilter").getSelectedKey();
+        },
+ 
+        onRefresh: function () {
 
-    const sDescription =
-        this.byId("partDescriptionFilter").getSelectedKey();
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
 
+                MessageBox.warning("Please submit or cancel the unsaved rows before refreshing.");
 
-    if (sPartCode) {
+                return;
 
-        aFilters.push(
-            new Filter(
-                "partCode",
-                FilterOperator.EQ,
-                sPartCode
-            )
-        );
+            }
 
-    }
+            this._aEditContexts = [];
 
+            this.byId("partsTable").getBinding("items").refresh();
 
-    if (sDescription) {
+            this._loadFilterValues();
 
-        aFilters.push(
-            new Filter(
-                "description",
-                FilterOperator.EQ,
-                sDescription
-            )
-        );
+        },
+ 
+        // =====================================================
 
-    }
+        // FILTER
 
+        // =====================================================
+ 
+        onGoFilter: function () {
 
-    oBinding.filter(
-        aFilters,
-        FilterType.Application
-    );
-},
+            // V4 cannot filter while unsaved changes exist
 
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
 
-onClearFilter: function () {
+                MessageBox.warning("Please submit or cancel the unsaved rows before filtering.");
 
-    this.byId("partCodeFilter").setSelectedKey("");
+                return;
 
-    this.byId("partDescriptionFilter").setSelectedKey("");
+            }
+ 
+            const aFilters = [];
 
+            const sPartCode = this.byId("partCodeFilter").getSelectedKey();
 
-    this.byId("partsTable")
-        .getBinding("items")
-        .filter(
-            [],
-            FilterType.Application
-        );
-},
+            const sDescription = this.byId("partDescriptionFilter").getSelectedKey();
+ 
+            if (sPartCode) {
 
-            _openPartDialog: function (sTitle, oData) {
+                aFilters.push(new Filter("partCode", FilterOperator.EQ, sPartCode));
 
-                if (!this._oPartDialog) {
+            }
 
-                    this._oPartCodeInput = new Input();
+            if (sDescription) {
 
-                    this._oValidFromInput = new DatePicker({
-                        valueFormat: "yyyy-MM-dd",
-                        displayFormat: "dd-MMM-yyyy",
-                        minDate: new Date()
+                aFilters.push(new Filter("description", FilterOperator.EQ, sDescription));
+
+            }
+ 
+            this.byId("partsTable").getBinding("items").filter(aFilters, FilterType.Application);
+ 
+            // rows are re-rendered after filtering
+
+            this._aEditContexts = [];
+
+        },
+ 
+        onClearFilter: function () {
+
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+
+                MessageBox.warning("Please submit or cancel the unsaved rows before clearing filters.");
+
+                return;
+
+            }
+ 
+            this.byId("partCodeFilter").setSelectedKey("");
+
+            this.byId("partDescriptionFilter").setSelectedKey("");
+ 
+            this.byId("partsTable").getBinding("items").filter([], FilterType.Application);
+ 
+            this._aEditContexts = [];
+
+        },
+ 
+        // unique values for the code and description dropdowns
+
+        _loadFilterValues: function () {
+
+            const oModel = this.getOwnerComponent().getModel();
+
+            if (!oModel) { return; }
+ 
+            oModel.bindList("/Parts", null, null, null, {
+
+                $select: "partCode,description"
+
+            })
+
+                .requestContexts(0, 1000)
+
+                .then(function (aContexts) {
+
+                    const aParts = aContexts.map(function (oContext) {
+
+                        return oContext.getObject();
+
                     });
+ 
+                    const fnUnique = function (sField) {
 
-                    this._oDescriptionInput = new Input();
-                    this._oMiyCostInput = new Input();
-                    this._oMiyMarkupInput = new Input();
-                    this._oPriceIndicatorInput = new Input();
+                        return Array.from(new Set(
 
-                    const oForm = new SimpleForm({
-                        editable: true,
-                        content: [
+                            aParts.map(function (oPart) { return oPart[sField]; })
 
-                            new Label({ text: "Part Code" }),
-                            this._oPartCodeInput,
+                                .filter(Boolean)
 
-                            new Label({ text: "Valid From" }),
-                            this._oValidFromInput,
+                        )).sort().map(function (sValue) {
 
-                            new Label({ text: "Description" }),
-                            this._oDescriptionInput,
-
-                            new Label({ text: "MIY Cost" }),
-                            this._oMiyCostInput,
-
-                            new Label({ text: "MIY Markup" }),
-                            this._oMiyMarkupInput,
-
-                            new Label({ text: "Price Indicator" }),
-                            this._oPriceIndicatorInput
-                        ]
-                    });
-
-                    this._oPartDialog = new Dialog({
-                        title: sTitle,
-                        contentWidth: "500px",
-                        content: oForm,
-
-                        beginButton: new Button({
-                            text: "Save",
-                            type: "Emphasized",
-                            press: this.onSave.bind(this)
-                        }),
-
-                        endButton: new Button({
-                            text: "Cancel",
-                            press: this.onCancel.bind(this)
-                        })
-                    });
-                }
-
-                // ADD
-                if (!oData) {
-
-                    this._oPartCodeInput.setValue("");
-                    this._oValidFromInput.setValue("");
-                    this._oDescriptionInput.setValue("");
-                    this._oMiyCostInput.setValue("");
-                    this._oMiyMarkupInput.setValue("");
-                    this._oPriceIndicatorInput.setValue("");
-
-                    this._oPartCodeInput.setEnabled(true);
-
-                }
-
-                // EDIT
-                else {
-
-                    this._oPartCodeInput.setValue(
-                        oData.partCode || ""
-                    );
-
-                    this._oValidFromInput.setValue(
-                        oData.validFrom || ""
-                    );
-
-                    this._oDescriptionInput.setValue(
-                        oData.description || ""
-                    );
-
-                    this._oMiyCostInput.setValue(
-                        oData.miyCost != null ? oData.miyCost : ""
-                    );
-
-                    this._oMiyMarkupInput.setValue(
-                        oData.miyMarkup != null ? oData.miyMarkup : ""
-                    );
-
-                    this._oPriceIndicatorInput.setValue(
-                        oData.priceIndicator || ""
-                    );
-
-                    // Key should not be changed
-                    this._oPartCodeInput.setEnabled(false);
-                }
-
-                this._oPartDialog.setTitle(sTitle);
-                this._oPartDialog.open();
-            },
-
-            onSave: async function () {
-
-                const oModel = this.getView().getModel();
-
-                const sPartCode = this._oPartCodeInput.getValue().trim();
-
-                if (!sPartCode) {
-                    MessageBox.error("Part Code is required.");
-                    return;
-                }
-
-                const oPayload = {
-
-                    validFrom:
-                        this._oValidFromInput.getValue() || null,
-
-                    description:
-                        this._oDescriptionInput.getValue(),
-
-                    miyCost:
-                        this._getNumber(
-                            this._oMiyCostInput.getValue()
-                        ),
-
-                    miyMarkup:
-                        this._getNumber(
-                            this._oMiyMarkupInput.getValue()
-                        ),
-
-                    priceIndicator:
-                        this._oPriceIndicatorInput.getValue()
-                };
-
-                try {
-
-                    // EDIT
-                    if (this._isEditMode) {
-
-                        Object.keys(oPayload).forEach((sProperty) => {
-
-                            this._oEditContext.setProperty(
-                                sProperty,
-                                oPayload[sProperty]
-                            );
+                            return { key: sValue, text: sValue };
 
                         });
 
-                        await this._oEditContext.requestObject();
+                    };
+ 
+                    this.getView().getModel("filter").setData({
 
-                        MessageToast.show(
-                            "Part updated successfully."
-                        );
+                        partCodes: fnUnique("partCode"),
+
+                        descriptions: fnUnique("description")
+
+                    });
+
+                }.bind(this))
+
+                .catch(function () {
+
+                    MessageBox.error("Failed to load filter values.");
+
+                });
+
+        },
+ 
+        // =====================================================
+
+        // ADD ROW (inline)
+
+        // =====================================================
+ 
+        onAddRow: function () {
+
+            const oBinding = this.byId("partsTable").getBinding("items");
+ 
+            // create(initialData, bSkipRefresh, bAtEnd)
+
+            oBinding.create({
+
+                partCode: "",
+
+                validFrom: null,
+
+                description: "",
+
+                miyCost: null,
+
+                miyMarkup: null,
+
+                priceIndicator: ""
+
+            }, true, false);              // add at the top
+
+        },
+ 
+        // =====================================================
+
+        // EDIT ROW (inline, existing rows)
+
+        // =====================================================
+ 
+        onEdit: function (oEvent) {
+
+            // Button -> HBox -> ColumnListItem
+
+            const oItem = oEvent.getSource().getParent().getParent();
+
+            const oContext = oItem.getBindingContext();
+ 
+            if (!oContext) {
+
+                MessageBox.error("Unable to get selected part.");
+
+                return;
+
+            }
+
+            if (oContext.isTransient()) { return; }                       // new rows are already editable
+
+            if (this._aEditContexts.indexOf(oContext) !== -1) { return; } // already in edit mode
+ 
+            this._aEditContexts.push(oContext);
+
+            this._toggleEditCells(oItem, true);
+
+        },
+ 
+        // Part Code (cell 0) is the key, so cells 1..5 become editable
+
+        _toggleEditCells: function (oItem, bEdit) {
+
+            const aCells = oItem.getCells();
+ 
+            for (let i = 1; i <= 5; i++) {
+
+                const aChildren = aCells[i].getItems();
+
+                aChildren[0].setVisible(!bEdit);   // Text
+
+                aChildren[1].setVisible(bEdit);    // Input / DatePicker
+
+            }
+
+        },
+ 
+        _exitEditMode: function () {
+
+            const aItems = this.byId("partsTable").getItems();
+ 
+            this._aEditContexts.forEach(function (oContext) {
+
+                const oItem = aItems.find(function (oRow) {
+
+                    return oRow.getBindingContext() === oContext;
+
+                });
+
+                if (oItem) { this._toggleEditCells(oItem, false); }
+
+            }.bind(this));
+ 
+            this._aEditContexts = [];
+
+        },
+ 
+        // =====================================================
+
+        // CANCEL (footer): discard new rows and edits
+
+        // =====================================================
+ 
+        onCancel: function () {
+
+            const oModel = this.getView().getModel();
+ 
+            if (!oModel.hasPendingChanges(UPDATE_GROUP) && this._aEditContexts.length === 0) {
+
+                MessageToast.show("Nothing to cancel.");
+
+                return;
+
+            }
+ 
+            oModel.resetChanges(UPDATE_GROUP);
+
+            this._exitEditMode();
+
+            MessageToast.show("Changes discarded.");
+
+        },
+ 
+        // =====================================================
+
+        // SUBMIT (footer)
+
+        // =====================================================
+ 
+        onSubmit: async function () {
+
+            const oModel = this.getView().getModel();
+ 
+            const aNewContexts = this.byId("partsTable")
+
+                .getBinding("items")
+
+                .getAllCurrentContexts()
+
+                .filter(function (oContext) { return oContext.isTransient(); });
+ 
+            if (aNewContexts.length === 0 && this._aEditContexts.length === 0) {
+
+                MessageToast.show("Nothing to submit.");
+
+                return;
+
+            }
+ 
+            // ---------- validation ----------
+
+            const bNewInvalid = aNewContexts.some(function (oContext) {
+
+                return !(oContext.getProperty("partCode") || "").trim();
+
+            });
+ 
+            if (bNewInvalid) {
+
+                MessageBox.error("Part Code is required.");
+
+                return;
+
+            }
+ 
+            // duplicate Part Codes in the new rows
+
+            const aCodes = aNewContexts.map(function (oContext) {
+
+                return oContext.getProperty("partCode").trim();
+
+            });
+ 
+            if (new Set(aCodes).size !== aCodes.length) {
+
+                MessageBox.error("Duplicate Part Codes found in the new rows.");
+
+                return;
+
+            }
+ 
+            // ---------- save ----------
+
+            this.getView().setBusy(true);
+ 
+            // cleared inputs return "", but the service expects null
+
+            aNewContexts.concat(this._aEditContexts).forEach(function (oContext) {
+
+                EMPTY_AS_NULL.forEach(function (sProperty) {
+
+                    if (oContext.getProperty(sProperty) === "") {
+
+                        oContext.setProperty(sProperty, null);
 
                     }
 
-                    // CREATE
-                    else {
+                });
 
-                        const oListBinding =
-                            oModel.bindList("/Parts");
+            });
+ 
+            try {
 
-                        const oContext =
-                            oListBinding.create({
-                                partCode: sPartCode,
-                                ...oPayload
-                            });
+                await oModel.submitBatch(UPDATE_GROUP);
+ 
+                // still pending => the backend rejected the request
 
-                        await oContext.created();
-
-                        MessageToast.show(
-                            "Part created successfully."
-                        );
-                    }
-
-                    this._oPartDialog.close();
-
-                } catch (oError) {
-
-                    console.error(oError);
+                if (oModel.hasPendingChanges(UPDATE_GROUP)) {
 
                     MessageBox.error(
-                        oError.message || "Operation failed."
+
+                        this._getLastErrorMessage() ||
+
+                        "Save failed. Please check the Network tab."
+
                     );
+
+                    return;
+
                 }
-            },
+ 
+                this._exitEditMode();
 
+                MessageToast.show("Saved successfully.");
 
-            onDelete: function (oEvent) {
+                this._loadFilterValues();
 
-                const oContext = oEvent.getSource().getBindingContext();
+            }
 
-                MessageBox.confirm(
-                    "Are you sure you want to delete this Part?",
-                    {
-                        title: "Confirm Delete",
+            catch (oError) {
 
-                        onClose: async function (sAction) {
+                MessageBox.error(
 
-                            if (sAction !== MessageBox.Action.OK) {
-                                return;
-                            }
+                    (oError && oError.message) || "Failed to save Parts."
 
-                            try {
-
-                                await oContext.delete();
-
-                                MessageToast.show(
-                                    "Part deleted successfully."
-                                );
-
-                            } catch (oError) {
-
-                                console.error(oError);
-
-                                MessageBox.error(
-                                    oError.message || "Delete failed."
-                                );
-                            }
-                        }
-                    }
                 );
-            },
 
-            _getNumber: function (sValue) {
+            }
 
-                if (
-                    sValue === "" ||
-                    sValue === null ||
-                    sValue === undefined
-                ) {
-                    return null;
-                }
+            finally {
 
-                return Number(sValue);
-            },
+                this.getView().setBusy(false);
 
-            onCancel: function () {
-                this._oPartDialog.close();
-            },
+            }
+
+        },
+ 
+        // last backend error text from the message manager
+
+        _getLastErrorMessage: function () {
+
+            const aMessages = sap.ui.getCore()
+
+                .getMessageManager()
+
+                .getMessageModel()
+
+                .getData()
+
+                .filter(function (oMessage) {
+
+                    return oMessage.getType() === "Error";
+
+                });
+ 
+            return aMessages.length
+
+                ? aMessages[aMessages.length - 1].getMessage()
+
+                : "";
+
+        },
+ 
+        // =====================================================
+
+        // DELETE
+
+        // =====================================================
+ 
+        onDelete: function (oEvent) {
+
+            const oContext = oEvent.getSource().getBindingContext();
+ 
+            if (!oContext) {
+
+                MessageBox.error("Unable to get selected part.");
+
+                return;
+
+            }
+ 
+            // new, unsaved row: just discard it
+
+            if (oContext.isTransient()) {
+
+                oContext.delete("$auto");
+
+                return;
+
+            }
+ 
+            const sPartCode = oContext.getProperty("partCode");
+ 
+            MessageBox.confirm("Are you sure you want to delete part " + sPartCode + "?", {
+
+                title: "Delete Part",
+ 
+                onClose: async function (sAction) {
+
+                    if (sAction !== MessageBox.Action.OK) { return; }
+ 
+                    try {
+
+                        // "$auto" = send immediately, do not wait for Submit
+
+                        await oContext.delete("$auto");
+ 
+                        // drop from edit list if it was there
+
+                        this._aEditContexts = this._aEditContexts.filter(function (oCtx) {
+
+                            return oCtx !== oContext;
+
+                        });
+ 
+                        MessageToast.show("Part deleted successfully.");
+
+                        this._loadFilterValues();
+
+                    }
+
+                    catch (oError) {
+
+                        MessageBox.error(oError.message || "Failed to delete part.");
+
+                    }
+
+                }.bind(this)
+
+            });
 
         }
-    );
+
+    });
 
 });
+ 

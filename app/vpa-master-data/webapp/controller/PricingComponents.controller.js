@@ -1,569 +1,618 @@
 sap.ui.define([
+
     "sap/ui/core/mvc/Controller",
-    "sap/m/Dialog",
-    "sap/m/Button",
-    "sap/m/Input",
-    "sap/m/DatePicker",
-    "sap/m/Select",
-    "sap/ui/core/Item",
-    "sap/m/Label",
-    "sap/ui/layout/form/SimpleForm",
+
     "sap/m/MessageToast",
+
     "sap/m/MessageBox",
+
     "sap/ui/model/Filter",
+
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/FilterType"
-], function (
-    Controller,
-    Dialog,
-    Button,
-    Input,
-    DatePicker,
-    Select,
-    Item,
-    Label,
-    SimpleForm,
-    MessageToast,
-    MessageBox,
-    Filter,
-    FilterOperator,
-    FilterType
-) {
+
+    "sap/ui/model/FilterType",
+
+    "sap/ui/model/json/JSONModel"
+
+], function (Controller, MessageToast, MessageBox, Filter, FilterOperator, FilterType, JSONModel) {
+ 
     "use strict";
+ 
+    // must match $$updateGroupId in the view
 
-    return Controller.extend(
-        "vpamasterdata.controller.PricingComponents",
-        {
+    const UPDATE_GROUP = "pricingGroup";
+ 
+    // properties the service expects as null, not "", when left empty
 
-            onNavBack: function () {
-                this.getOwnerComponent()
-                    .getRouter()
-                    .navTo("RouteView1");
-            },
+    const EMPTY_AS_NULL = [
 
-            onAdd: function () {
+        "validFrom", "helmet", "transportation", "helmetMargin",
 
-                this._isEditMode = false;
-                this._oEditContext = null;
+        "otherExpensesBelow500", "otherExpensesAbove500",
 
-                this._openPricingDialog("Add Pricing Component");
-            },
+        "insuranceRateBelow350", "insuranceRateAbove350",
 
+        "tpaPaBelow350", "tpaPaAbove350", "noPlateCharges"
 
-            onGoFilter: function () {
+    ];
+ 
+    return Controller.extend("vpamasterdata.controller.PricingComponents", {
+ 
+        // =====================================================
 
-                const oTable = this.byId("pricingComponentsTable");
-                const oBinding = oTable.getBinding("items");
+        // INIT
 
-                const aFilters = [];
+        // =====================================================
+ 
+        onInit: function () {
 
-                const sRegionCode =
-                    this.byId("regionCodeFilterPC").getSelectedKey();
+            // contexts of existing rows currently in edit mode
 
-                const sEngineType =
-                    this.byId("engineTypeFilterPC").getSelectedKey();
+            this._aEditContexts = [];
+ 
+            this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
 
-                const sApprovalStatus =
-                    this.byId("approvalStatusFilterPC").getSelectedKey();
+            this.getView().setModel(new JSONModel({ regionCodes: [] }), "filter");
+ 
+            this._loadFilterValues();
 
+        },
+ 
+        onNavBack: function () {
 
-                if (sRegionCode) {
-                    aFilters.push(
-                        new Filter(
-                            "regionCode",
-                            FilterOperator.EQ,
-                            sRegionCode
-                        )
-                    );
-                }
+            this.getOwnerComponent().getRouter().navTo("RouteView1");
 
-                if (sEngineType) {
-                    aFilters.push(
-                        new Filter(
-                            "engineType",
-                            FilterOperator.EQ,
-                            sEngineType
-                        )
-                    );
-                }
+        },
+ 
+        onTableUpdateFinished: function (oEvent) {
 
-                if (sApprovalStatus) {
-                    aFilters.push(
-                        new Filter(
-                            "approvalStatus",
-                            FilterOperator.EQ,
-                            sApprovalStatus
-                        )
-                    );
-                }
+            this.getView().getModel("viewModel")
 
-                oBinding.filter(
-                    aFilters,
-                    FilterType.Application
+                .setProperty("/count", oEvent.getParameter("total") || 0);
+
+        },
+ 
+        onRefresh: function () {
+
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+
+                MessageBox.warning("Please submit or cancel the unsaved rows before refreshing.");
+
+                return;
+
+            }
+
+            this._aEditContexts = [];
+
+            this.byId("pricingComponentsTable").getBinding("items").refresh();
+
+            this._loadFilterValues();
+
+        },
+ 
+        // =====================================================
+
+        // FILTER
+
+        // =====================================================
+ 
+        onGoFilter: function () {
+
+            // V4 cannot filter while unsaved changes exist
+
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+
+                MessageBox.warning("Please submit or cancel the unsaved rows before filtering.");
+
+                return;
+
+            }
+ 
+            const aFilters = [];
+
+            const sRegionCode = this.byId("regionCodeFilterPC").getSelectedKey();
+
+            const sEngineType = this.byId("engineTypeFilterPC").getSelectedKey();
+
+            const sApprovalStatus = this.byId("approvalStatusFilterPC").getSelectedKey();
+ 
+            if (sRegionCode) {
+
+                aFilters.push(new Filter("regionCode", FilterOperator.EQ, sRegionCode));
+
+            }
+
+            if (sEngineType) {
+
+                aFilters.push(new Filter("engineType", FilterOperator.EQ, sEngineType));
+
+            }
+
+            if (sApprovalStatus) {
+
+                aFilters.push(new Filter("approvalStatus", FilterOperator.EQ, sApprovalStatus));
+
+            }
+ 
+            this.byId("pricingComponentsTable").getBinding("items")
+
+                .filter(aFilters, FilterType.Application);
+ 
+            // rows are re-rendered after filtering
+
+            this._aEditContexts = [];
+
+        },
+ 
+        onClearFilter: function () {
+
+            if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
+
+                MessageBox.warning("Please submit or cancel the unsaved rows before clearing filters.");
+
+                return;
+
+            }
+ 
+            this.byId("regionCodeFilterPC").setSelectedKey("");
+
+            this.byId("engineTypeFilterPC").setSelectedKey("");
+
+            this.byId("approvalStatusFilterPC").setSelectedKey("");
+ 
+            this.byId("pricingComponentsTable").getBinding("items")
+
+                .filter([], FilterType.Application);
+ 
+            this._aEditContexts = [];
+
+        },
+ 
+        // unique values for the region code dropdown
+
+        _loadFilterValues: function () {
+
+            const oModel = this.getOwnerComponent().getModel();
+
+            if (!oModel) { return; }
+ 
+            oModel.bindList("/PricingComponents", null, null, null, {
+
+                $select: "regionCode"
+
+            })
+
+                .requestContexts(0, 1000)
+
+                .then(function (aContexts) {
+
+                    const aValues = aContexts.map(function (oContext) {
+
+                        return oContext.getObject().regionCode;
+
+                    }).filter(Boolean);
+ 
+                    const aRegionCodes = Array.from(new Set(aValues)).sort()
+
+                        .map(function (sValue) {
+
+                            return { key: sValue, text: sValue };
+
+                        });
+ 
+                    this.getView().getModel("filter").setData({ regionCodes: aRegionCodes });
+
+                }.bind(this))
+
+                .catch(function () {
+
+                    MessageBox.error("Failed to load filter values.");
+
+                });
+
+        },
+ 
+        // =====================================================
+
+        // ADD ROW (inline)
+
+        // =====================================================
+ 
+        onAddRow: function () {
+
+            const oBinding = this.byId("pricingComponentsTable").getBinding("items");
+ 
+            // create(initialData, bSkipRefresh, bAtEnd)
+
+            oBinding.create({
+
+                regionCode: "",
+
+                engineType: "Petrol",
+
+                validFrom: null,
+
+                helmet: null,
+
+                transportation: null,
+
+                helmetMargin: null,
+
+                otherExpensesBelow500: null,
+
+                otherExpensesAbove500: null,
+
+                insuranceRateBelow350: null,
+
+                insuranceRateAbove350: null,
+
+                tpaPaBelow350: null,
+
+                tpaPaAbove350: null,
+
+                noPlateCharges: null,
+
+                approvalStatus: "DRAFT"   // draft by default
+
+            }, true, false);              // add at the top
+
+        },
+ 
+        // =====================================================
+
+        // EDIT ROW (inline, existing rows)
+
+        // =====================================================
+ 
+        onEdit: function (oEvent) {
+
+            // Button -> HBox -> ColumnListItem
+
+            const oItem = oEvent.getSource().getParent().getParent();
+
+            const oContext = oItem.getBindingContext();
+ 
+            if (!oContext) {
+
+                MessageBox.error("Unable to get selected pricing component.");
+
+                return;
+
+            }
+
+            if (oContext.isTransient()) { return; }                       // new rows are already editable
+
+            if (this._aEditContexts.indexOf(oContext) !== -1) { return; } // already in edit mode
+ 
+            this._aEditContexts.push(oContext);
+
+            this._toggleEditCells(oItem, true);
+
+        },
+ 
+        // Region Code (cell 0) and Engine Type (cell 1) form the key and
+
+        // Approval Status (13) is system controlled, so cells 2..12 become editable
+
+        _toggleEditCells: function (oItem, bEdit) {
+
+            const aCells = oItem.getCells();
+ 
+            for (let i = 2; i <= 12; i++) {
+
+                const aChildren = aCells[i].getItems();
+
+                aChildren[0].setVisible(!bEdit);   // Text
+
+                aChildren[1].setVisible(bEdit);    // Input / DatePicker
+
+            }
+
+        },
+ 
+        _exitEditMode: function () {
+
+            const aItems = this.byId("pricingComponentsTable").getItems();
+ 
+            this._aEditContexts.forEach(function (oContext) {
+
+                const oItem = aItems.find(function (oRow) {
+
+                    return oRow.getBindingContext() === oContext;
+
+                });
+
+                if (oItem) { this._toggleEditCells(oItem, false); }
+
+            }.bind(this));
+ 
+            this._aEditContexts = [];
+
+        },
+ 
+        // =====================================================
+
+        // CANCEL (footer): discard new rows and edits
+
+        // =====================================================
+ 
+        onCancel: function () {
+
+            const oModel = this.getView().getModel();
+ 
+            if (!oModel.hasPendingChanges(UPDATE_GROUP) && this._aEditContexts.length === 0) {
+
+                MessageToast.show("Nothing to cancel.");
+
+                return;
+
+            }
+ 
+            oModel.resetChanges(UPDATE_GROUP);
+
+            this._exitEditMode();
+
+            MessageToast.show("Changes discarded.");
+
+        },
+ 
+        // =====================================================
+
+        // SUBMIT (footer)
+
+        // =====================================================
+ 
+        onSubmit: async function () {
+
+            const oModel = this.getView().getModel();
+ 
+            const aNewContexts = this.byId("pricingComponentsTable")
+
+                .getBinding("items")
+
+                .getAllCurrentContexts()
+
+                .filter(function (oContext) { return oContext.isTransient(); });
+ 
+            if (aNewContexts.length === 0 && this._aEditContexts.length === 0) {
+
+                MessageToast.show("Nothing to submit.");
+
+                return;
+
+            }
+ 
+            // ---------- validation ----------
+
+            const bNewInvalid = aNewContexts.some(function (oContext) {
+
+                return (
+
+                    !(oContext.getProperty("regionCode") || "").trim() ||
+
+                    !oContext.getProperty("engineType")
+
                 );
-            },
-
-            onClearFilter: function () {
-
-                this.byId("regionCodeFilterPC").setSelectedKey("");
-                this.byId("engineTypeFilterPC").setSelectedKey("");
-                this.byId("approvalStatusFilterPC").setSelectedKey("");
-
-                this.byId("pricingComponentsTable")
-                    .getBinding("items")
-                    .filter([], FilterType.Application);
-            },
-
-            _openPricingDialog: function (sTitle, oData) {
-
-                if (!this._oPricingDialog) {
-
-                    this._oRegionCodeInput = new Input();
-
-                    this._oEngineTypeInput = new Select({
-                        items: [
-                            new Item({
-                                key: "Petrol",
-                                text: "Petrol"
-                            }),
-                            new Item({
-                                key: "EV",
-                                text: "EV"
-                            })
-                        ]
-                    });
-
-                    this._oValidFromInput = new DatePicker({
-                        valueFormat: "yyyy-MM-dd",
-                        displayFormat: "yyyy-MM-dd"
-                    });
-
-                    this._oHelmetInput = new Input({
-                        type: "Number"
-                    });
-
-                    this._oTransportationInput = new Input({
-                        type: "Number"
-                    });
-
-                    this._oHelmetMarginInput = new Input({
-                        type: "Number"
-                    });
-
-                    this._oOtherExpensesBelow500Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oOtherExpensesAbove500Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oInsuranceRateBelow350Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oInsuranceRateAbove350Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oTpaPaBelow350Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oTpaPaAbove350Input = new Input({
-                        type: "Number"
-                    });
-
-                    this._oNoPlateChargesInput = new Input({
-                        type: "Number"
-                    });
-
-                    this._oApprovalStatusInput = new Select({
-                        items: [
-                            new Item({
-                                key: "DRAFT",
-                                text: "DRAFT"
-                            }),
-                            new Item({
-                                key: "SUBMITTED",
-                                text: "SUBMITTED"
-                            }),
-                            new Item({
-                                key: "APPROVED",
-                                text: "APPROVED"
-                            }),
-                            new Item({
-                                key: "REJECTED",
-                                text: "REJECTED"
-                            })
-                        ]
-                    });
-
-                    const oForm = new SimpleForm({
-                        editable: true,
-                        layout: "ResponsiveGridLayout",
-                        content: [
 
-                            new Label({ text: "Region Code" }),
-                            this._oRegionCodeInput,
+            });
+ 
+            if (bNewInvalid) {
 
-                            new Label({ text: "Engine Type" }),
-                            this._oEngineTypeInput,
+                MessageBox.error("Region Code and Engine Type are required.");
 
-                            new Label({ text: "Valid From" }),
-                            this._oValidFromInput,
+                return;
 
-                            new Label({ text: "Helmet" }),
-                            this._oHelmetInput,
+            }
+ 
+            // duplicate Region Code + Engine Type in the new rows
 
-                            new Label({ text: "Transportation" }),
-                            this._oTransportationInput,
+            const aKeys = aNewContexts.map(function (oContext) {
 
-                            new Label({ text: "Helmet Margin" }),
-                            this._oHelmetMarginInput,
+                return oContext.getProperty("regionCode").trim() + "|" +
 
-                            new Label({ text: "Other Expenses Below 500" }),
-                            this._oOtherExpensesBelow500Input,
+                    oContext.getProperty("engineType");
 
-                            new Label({ text: "Other Expenses Above 500" }),
-                            this._oOtherExpensesAbove500Input,
+            });
+ 
+            if (new Set(aKeys).size !== aKeys.length) {
 
-                            new Label({ text: "Insurance Rate Below 350" }),
-                            this._oInsuranceRateBelow350Input,
+                MessageBox.error("Duplicate Region Code / Engine Type combinations found in the new rows.");
 
-                            new Label({ text: "Insurance Rate Above 350" }),
-                            this._oInsuranceRateAbove350Input,
+                return;
 
-                            new Label({ text: "TPA/PA Below 350" }),
-                            this._oTpaPaBelow350Input,
+            }
+ 
+            // ---------- save ----------
 
-                            new Label({ text: "TPA/PA Above 350" }),
-                            this._oTpaPaAbove350Input,
+            this.getView().setBusy(true);
+ 
+            // DRAFT -> SUBMITTED (new rows and edited rows)
 
-                            new Label({ text: "No Plate Charges" }),
-                            this._oNoPlateChargesInput,
+            const aSubmitContexts = aNewContexts.concat(this._aEditContexts);
 
-                            new Label({ text: "Approval Status" }),
-                            this._oApprovalStatusInput
-                        ]
-                    });
+            const mPrevious = new Map();
+ 
+            aSubmitContexts.forEach(function (oContext) {
 
-                    this._oPricingDialog = new Dialog({
-                        contentWidth: "600px",
-                        contentHeight: "auto",
+                // cleared inputs return "", but the service expects null
 
-                        buttons: [
+                EMPTY_AS_NULL.forEach(function (sProperty) {
 
-                            new Button({
-                                text: "Save",
-                                type: "Emphasized",
-                                press: this.onSave.bind(this)
-                            }),
+                    if (oContext.getProperty(sProperty) === "") {
 
-                            new Button({
-                                text: "Cancel",
-                                press: this.onCancel.bind(this)
-                            })
-                        ]
-                    });
+                        oContext.setProperty(sProperty, null);
 
-                    this._oPricingDialog.addContent(oForm);
+                    }
 
-                    this.getView().addDependent(this._oPricingDialog);
-                }
+                });
+ 
+                mPrevious.set(oContext, oContext.getProperty("approvalStatus"));
 
-                this._oPricingDialog.setTitle(sTitle);
+                oContext.setProperty("approvalStatus", "SUBMITTED");
 
-                // Fill values in Edit mode
-                if (oData) {
+            });
+ 
+            // put the old value back if the save fails
 
-                    this._oRegionCodeInput.setValue(
-                        oData.regionCode || ""
-                    );
+            const fnRevertStatus = function () {
 
-                    this._oEngineTypeInput.setSelectedKey(
-                        oData.engineType || ""
-                    );
+                mPrevious.forEach(function (sOld, oContext) {
 
-                    this._oValidFromInput.setValue(
-                        oData.validFrom || ""
-                    );
+                    oContext.setProperty("approvalStatus", sOld || "DRAFT");
 
-                    this._oHelmetInput.setValue(
-                        oData.helmet ?? ""
-                    );
+                });
 
-                    this._oTransportationInput.setValue(
-                        oData.transportation ?? ""
-                    );
+            };
+ 
+            try {
 
-                    this._oHelmetMarginInput.setValue(
-                        oData.helmetMargin ?? ""
-                    );
+                await oModel.submitBatch(UPDATE_GROUP);
+ 
+                // still pending => the backend rejected the request
 
-                    this._oOtherExpensesBelow500Input.setValue(
-                        oData.otherExpensesBelow500 ?? ""
-                    );
+                if (oModel.hasPendingChanges(UPDATE_GROUP)) {
 
-                    this._oOtherExpensesAbove500Input.setValue(
-                        oData.otherExpensesAbove500 ?? ""
-                    );
-
-                    this._oInsuranceRateBelow350Input.setValue(
-                        oData.insuranceRateBelow350 ?? ""
-                    );
-
-                    this._oInsuranceRateAbove350Input.setValue(
-                        oData.insuranceRateAbove350 ?? ""
-                    );
-
-                    this._oTpaPaBelow350Input.setValue(
-                        oData.tpaPaBelow350 ?? ""
-                    );
-
-                    this._oTpaPaAbove350Input.setValue(
-                        oData.tpaPaAbove350 ?? ""
-                    );
-
-                    this._oNoPlateChargesInput.setValue(
-                        oData.noPlateCharges ?? ""
-                    );
-
-                    this._oApprovalStatusInput.setSelectedKey(
-                        oData.approvalStatus || ""
-                    );
-
-                    // Composite key should not be changed
-                    this._oRegionCodeInput.setEnabled(false);
-                    this._oEngineTypeInput.setEnabled(false);
-
-                } else {
-
-                    // Clear fields for Add
-                    this._oRegionCodeInput.setValue("");
-                    this._oEngineTypeInput.setSelectedKey("");
-                    this._oValidFromInput.setValue("");
-
-                    this._oHelmetInput.setValue("");
-                    this._oTransportationInput.setValue("");
-                    this._oHelmetMarginInput.setValue("");
-
-                    this._oOtherExpensesBelow500Input.setValue("");
-                    this._oOtherExpensesAbove500Input.setValue("");
-
-                    this._oInsuranceRateBelow350Input.setValue("");
-                    this._oInsuranceRateAbove350Input.setValue("");
-
-                    this._oTpaPaBelow350Input.setValue("");
-                    this._oTpaPaAbove350Input.setValue("");
-
-                    this._oNoPlateChargesInput.setValue("");
-
-                    this._oApprovalStatusInput.setSelectedKey("DRAFT");
-
-                    this._oRegionCodeInput.setEnabled(true);
-                    this._oEngineTypeInput.setEnabled(true);
-                }
-
-                this._oPricingDialog.open();
-            },
-
-            onCancel: function () {
-
-                this._oPricingDialog.close();
-            },
-
-            onEdit: function (oEvent) {
-
-                const oContext =
-                    oEvent.getSource().getBindingContext();
-
-                const oData =
-                    oContext.getObject();
-
-                this._isEditMode = true;
-                this._oEditContext = oContext;
-
-                this._openPricingDialog(
-                    "Edit Pricing Component",
-                    oData
-                );
-            },
-
-            onSave: async function () {
-
-                const oModel = this.getView().getModel();
-
-                const sRegionCode =
-                    this._oRegionCodeInput.getValue().trim();
-
-                const sEngineType =
-                    this._oEngineTypeInput.getSelectedKey();
-
-                const sValidFrom =
-                    this._oValidFromInput.getValue();
-
-                if (!sRegionCode || !sEngineType) {
+                    fnRevertStatus();
 
                     MessageBox.error(
-                        "Region Code and Engine Type are required."
+
+                        this._getLastErrorMessage() ||
+
+                        "Save failed. Please check the Network tab."
+
                     );
 
                     return;
+
                 }
+ 
+                this._exitEditMode();
 
-                const oPayload = {
+                MessageToast.show("Saved successfully.");
 
-                    validFrom: sValidFrom || null,
+                this._loadFilterValues();
 
-                    helmet: this._getNumber(
-                        this._oHelmetInput
-                    ),
-
-                    transportation: this._getNumber(
-                        this._oTransportationInput
-                    ),
-
-                    helmetMargin: this._getNumber(
-                        this._oHelmetMarginInput
-                    ),
-
-                    otherExpensesBelow500: this._getNumber(
-                        this._oOtherExpensesBelow500Input
-                    ),
-
-                    otherExpensesAbove500: this._getNumber(
-                        this._oOtherExpensesAbove500Input
-                    ),
-
-                    insuranceRateBelow350: this._getNumber(
-                        this._oInsuranceRateBelow350Input
-                    ),
-
-                    insuranceRateAbove350: this._getNumber(
-                        this._oInsuranceRateAbove350Input
-                    ),
-
-                    tpaPaBelow350: this._getNumber(
-                        this._oTpaPaBelow350Input
-                    ),
-
-                    tpaPaAbove350: this._getNumber(
-                        this._oTpaPaAbove350Input
-                    ),
-
-                    noPlateCharges: this._getNumber(
-                        this._oNoPlateChargesInput
-                    ),
-
-                    approvalStatus:
-                        this._oApprovalStatusInput.getSelectedKey()
-                };
-
-                try {
-
-                    if (this._isEditMode) {
-
-                        const oContext = this._oEditContext;
-
-                        Object.keys(oPayload).forEach((sProperty) => {
-                            oContext.setProperty(
-                                sProperty,
-                                oPayload[sProperty]
-                            );
-                        });
-
-                        await oContext.requestObject();
-
-                        MessageToast.show(
-                            "Pricing Component updated successfully"
-                        );
-
-                    } else {
-
-                        const oListBinding =
-                            oModel.bindList("/PricingComponents");
-
-                        const oContext =
-                            oListBinding.create({
-
-                                regionCode: sRegionCode,
-
-                                engineType: sEngineType,
-
-                                ...oPayload
-                            });
-
-                        await oContext.created();
-
-                        MessageToast.show(
-                            "Pricing Component created successfully"
-                        );
-                    }
-
-                    this._oPricingDialog.close();
-
-                } catch (oError) {
-
-                    console.error(oError);
-
-                    MessageBox.error(
-                        "Failed to save Pricing Component."
-                    );
-                }
-            },
-
-            onDelete: function (oEvent) {
-
-                const oContext =
-                    oEvent.getSource().getBindingContext();
-
-                const sRegionCode =
-                    oContext.getProperty("regionCode");
-
-                const sEngineType =
-                    oContext.getProperty("engineType");
-
-                MessageBox.confirm(
-                    `Delete ${sRegionCode} - ${sEngineType}?`,
-                    {
-                        title: "Confirm Delete",
-
-                        onClose: async (sAction) => {
-
-                            if (sAction !== MessageBox.Action.OK) {
-                                return;
-                            }
-
-                            try {
-
-                                await oContext.delete();
-
-                                MessageToast.show(
-                                    "Pricing Component deleted successfully"
-                                );
-
-                            } catch (oError) {
-
-                                console.error(oError);
-
-                                MessageBox.error(
-                                    "Failed to delete Pricing Component."
-                                );
-                            }
-                        }
-                    }
-                );
-            },
-
-            _getNumber: function (oInput) {
-
-                const sValue = oInput.getValue();
-
-                return sValue !== ""
-                    ? Number(sValue)
-                    : null;
             }
+
+            catch (oError) {
+
+                fnRevertStatus();
+
+                MessageBox.error(
+
+                    (oError && oError.message) || "Failed to save Pricing Components."
+
+                );
+
+            }
+
+            finally {
+
+                this.getView().setBusy(false);
+
+            }
+
+        },
+ 
+        // last backend error text from the message manager
+
+        _getLastErrorMessage: function () {
+
+            const aMessages = sap.ui.getCore()
+
+                .getMessageManager()
+
+                .getMessageModel()
+
+                .getData()
+
+                .filter(function (oMessage) {
+
+                    return oMessage.getType() === "Error";
+
+                });
+ 
+            return aMessages.length
+
+                ? aMessages[aMessages.length - 1].getMessage()
+
+                : "";
+
+        },
+ 
+        // =====================================================
+
+        // DELETE
+
+        // =====================================================
+ 
+        onDelete: function (oEvent) {
+
+            const oContext = oEvent.getSource().getBindingContext();
+ 
+            if (!oContext) {
+
+                MessageBox.error("Unable to get selected pricing component.");
+
+                return;
+
+            }
+ 
+            // new, unsaved row: just discard it
+
+            if (oContext.isTransient()) {
+
+                oContext.delete("$auto");
+
+                return;
+
+            }
+ 
+            const sLabel = oContext.getProperty("regionCode") + " - " +
+
+                oContext.getProperty("engineType");
+ 
+            MessageBox.confirm("Are you sure you want to delete " + sLabel + "?", {
+
+                title: "Delete Pricing Component",
+ 
+                onClose: async function (sAction) {
+
+                    if (sAction !== MessageBox.Action.OK) { return; }
+ 
+                    try {
+
+                        // "$auto" = send immediately, do not wait for Submit
+
+                        await oContext.delete("$auto");
+ 
+                        // drop from edit list if it was there
+
+                        this._aEditContexts = this._aEditContexts.filter(function (oCtx) {
+
+                            return oCtx !== oContext;
+
+                        });
+ 
+                        MessageToast.show("Pricing Component deleted successfully.");
+
+                        this._loadFilterValues();
+
+                    }
+
+                    catch (oError) {
+
+                        MessageBox.error(oError.message || "Failed to delete Pricing Component.");
+
+                    }
+
+                }.bind(this)
+
+            });
+
         }
-    );
+
+    });
+
 });
+ 

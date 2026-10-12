@@ -399,3 +399,108 @@
     }
 
 }
+
+
+/* MTO configurations Master data list page */
+
+/* ---------- Page background + header ---------- */
+.vpaPage > section {
+    background: linear-gradient(180deg, #f3f6fb 0%, #dce8f5 100%);
+}
+.vpaHeader.sapMBar {
+    background: #043a6f;
+    height: 3.25rem;
+    border-bottom: none;
+}
+.vpaHeader .sapMTitle {
+    color: #fff;
+    font-weight: 700;
+}
+.vpaHeader .sapMBtn .sapMBtnIcon {
+    color: #fff;
+}
+
+/* ---------- White rounded cards ---------- */
+.vpaCard {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 40, 90, 0.12);
+    overflow: hidden;
+}
+.vpaCard.sapMPanel {
+    border: none;
+}
+.vpaCard .sapMPanelHdr {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #1d2d3e;
+}
+.vpaTableCard {
+    padding: 0.5rem 1rem 1rem 1rem;
+}
+
+/* ---------- Table look ---------- */
+.vpaTable .sapMListTblHeaderCell {
+    background: #e8eff8;
+}
+.vpaTable .sapMListTblHeaderCell .sapMText,
+.vpaTable .sapMListTblHeaderCell span {
+    color: #0a5cb8;
+    font-weight: 700;
+}
+.vpaTable tbody tr.sapMLIB:nth-of-type(even) {
+    background: #f6f9fd;
+}
+
+
+
+
+/* ----------  MTO Config - Object page ---------- */
+.vpaObjectBar.sapMBar {
+    background: #fff;
+    height: 3.5rem;
+    border-bottom: 1px solid #d9e1ec;
+}
+.vpaBackBtn.sapMBtn {
+    border: 1px solid #0a5cb8;
+    border-radius: 8px;
+    color: #0a5cb8;
+    background: #fff;
+}
+
+.vpaObjectPage,
+.vpaObjectPage .sapUxAPObjectPageWrapper,
+.vpaObjectPage .sapUxAPObjectPageContainer {
+    background: #f2f5f9;
+}
+.vpaObjectPage .sapUxAPObjectPageSection,
+.vpaObjectPage .sapUxAPObjectPageSubSection {
+    background: transparent;
+}
+.vpaObjectPage .sapUxAPObjectPageSectionTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1d2d3e;
+}
+.vpaObjectTitle.sapMTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1d2d3e;
+}
+.vpaSubtitle {
+    color: #4a5b6d;
+    font-size: 1rem;
+}
+
+/* label above value, like the Submission Details card */
+.vpaFieldLabel {
+    color: #5b6b7d;
+    font-size: 0.875rem;
+}
+.vpaFieldValue {
+    color: #1d2d3e;
+    font-size: 1rem;
+}
+.vpaDetailsCard {
+    padding: 1.25rem 1.5rem 1.5rem 1.5rem;
+}
