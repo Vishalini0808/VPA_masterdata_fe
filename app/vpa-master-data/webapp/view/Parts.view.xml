@@ -175,7 +175,8 @@
                         <columns>
 <Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Part Code"/></Column>
 <Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Valid From"/></Column>
-<Column width="18rem" hAlign="Begin"  vAlign="Middle"><Text text="Description"/></Column>
+<Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Description"/></Column>
+<Column width="9rem"  hAlign="Begin" vAlign="Middle"><Text text="Status"/></Column>
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="MIY Cost"/></Column>
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="MIY Markup"/></Column>
 <Column width="9rem"  hAlign="Begin"  vAlign="Middle"><Text text="Price Indicator"/></Column>
@@ -240,8 +241,17 @@
 
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
 </VBox>
+
+
+<!-- 3 APPROVAL STATUS (read-only) -->
+<ObjectStatus
+    text="{approvalStatus}"
+    state="{= ${approvalStatus} === 'APPROVED' ? 'Success'
+            : ${approvalStatus} === 'SUBMITTED' ? 'Warning'
+            : ${approvalStatus} === 'REJECTED' ? 'Error'
+            : 'None' }"/>
  
-                                    <!-- 3 MIY COST -->
+                                    <!-- 4 MIY COST -->
 <VBox>
 <Text
 
@@ -263,7 +273,7 @@
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
 </VBox>
  
-                                    <!-- 4 MIY MARKUP -->
+                                    <!-- 5 MIY MARKUP -->
 <VBox>
 <Text
 
@@ -285,7 +295,7 @@
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
 </VBox>
  
-                                    <!-- 5 PRICE INDICATOR -->
+                                    <!-- 6 PRICE INDICATOR -->
 <VBox>
 <Text
 
@@ -301,7 +311,7 @@
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
 </VBox>
  
-                                    <!-- 6 ACTIONS (edit only makes sense on saved rows) -->
+                                    <!-- 7 ACTIONS (edit only makes sense on saved rows) -->
 <HBox justifyContent="Center">
 <Button
 

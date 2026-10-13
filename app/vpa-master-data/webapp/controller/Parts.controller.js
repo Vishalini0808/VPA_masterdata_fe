@@ -15,31 +15,32 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel"
 
 ], function (Controller, MessageToast, MessageBox, Filter, FilterOperator, FilterType, JSONModel) {
- 
+
     "use strict";
- 
+
     // must match $$updateGroupId in the view
 
     const UPDATE_GROUP = "partGroup";
- 
+
     // properties the service expects as null, not "", when left empty
 
     const EMPTY_AS_NULL = ["validFrom", "miyCost", "miyMarkup"];
- 
+    const EDITABLE_CELLS = [1, 2, 4, 5, 6];
+
     return Controller.extend("vpamasterdata.controller.Parts", {
- 
+
         // =====================================================
 
         // INIT
 
         // =====================================================
- 
+
         onInit: function () {
 
             // contexts of existing rows currently in edit mode
 
             this._aEditContexts = [];
- 
+
             this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
 
             this.getView().setModel(
@@ -49,17 +50,17 @@ sap.ui.define([
                 "filter"
 
             );
- 
+
             this._loadFilterValues();
 
         },
- 
+
         onNavBack: function () {
 
             this.getOwnerComponent().getRouter().navTo("RouteView1");
 
         },
- 
+
         onTableUpdateFinished: function (oEvent) {
 
             this.getView().getModel("viewModel")
@@ -67,7 +68,7 @@ sap.ui.define([
                 .setProperty("/count", oEvent.getParameter("total") || 0);
 
         },
- 
+
         onRefresh: function () {
 
             if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
@@ -85,13 +86,13 @@ sap.ui.define([
             this._loadFilterValues();
 
         },
- 
+
         // =====================================================
 
         // FILTER
 
         // =====================================================
- 
+
         onGoFilter: function () {
 
             // V4 cannot filter while unsaved changes exist
@@ -103,13 +104,13 @@ sap.ui.define([
                 return;
 
             }
- 
+
             const aFilters = [];
 
             const sPartCode = this.byId("partCodeFilter").getSelectedKey();
 
             const sDescription = this.byId("partDescriptionFilter").getSelectedKey();
- 
+
             if (sPartCode) {
 
                 aFilters.push(new Filter("partCode", FilterOperator.EQ, sPartCode));
@@ -121,15 +122,15 @@ sap.ui.define([
                 aFilters.push(new Filter("description", FilterOperator.EQ, sDescription));
 
             }
- 
+
             this.byId("partsTable").getBinding("items").filter(aFilters, FilterType.Application);
- 
+
             // rows are re-rendered after filtering
 
             this._aEditContexts = [];
 
         },
- 
+
         onClearFilter: function () {
 
             if (this.getView().getModel().hasPendingChanges(UPDATE_GROUP)) {
@@ -139,17 +140,17 @@ sap.ui.define([
                 return;
 
             }
- 
+
             this.byId("partCodeFilter").setSelectedKey("");
 
             this.byId("partDescriptionFilter").setSelectedKey("");
- 
+
             this.byId("partsTable").getBinding("items").filter([], FilterType.Application);
- 
+
             this._aEditContexts = [];
 
         },
- 
+
         // unique values for the code and description dropdowns
 
         _loadFilterValues: function () {
@@ -157,7 +158,7 @@ sap.ui.define([
             const oModel = this.getOwnerComponent().getModel();
 
             if (!oModel) { return; }
- 
+
             oModel.bindList("/Parts", null, null, null, {
 
                 $select: "partCode,description"
@@ -173,7 +174,7 @@ sap.ui.define([
                         return oContext.getObject();
 
                     });
- 
+
                     const fnUnique = function (sField) {
 
                         return Array.from(new Set(
@@ -189,7 +190,7 @@ sap.ui.define([
                         });
 
                     };
- 
+
                     this.getView().getModel("filter").setData({
 
                         partCodes: fnUnique("partCode"),
@@ -207,17 +208,17 @@ sap.ui.define([
                 });
 
         },
- 
+
         // =====================================================
 
         // ADD ROW (inline)
 
         // =====================================================
- 
+
         onAddRow: function () {
 
             const oBinding = this.byId("partsTable").getBinding("items");
- 
+
             // create(initialData, bSkipRefresh, bAtEnd)
 
             oBinding.create({
@@ -228,6 +229,8 @@ sap.ui.define([
 
                 description: "",
 
+                approvalStatus: "DRAFT",
+
                 miyCost: null,
 
                 miyMarkup: null,
@@ -237,13 +240,13 @@ sap.ui.define([
             }, true, false);              // add at the top
 
         },
- 
+
         // =====================================================
 
         // EDIT ROW (inline, existing rows)
 
         // =====================================================
- 
+
         onEdit: function (oEvent) {
 
             // Button -> HBox -> ColumnListItem
@@ -251,7 +254,7 @@ sap.ui.define([
             const oItem = oEvent.getSource().getParent().getParent();
 
             const oContext = oItem.getBindingContext();
- 
+
             if (!oContext) {
 
                 MessageBox.error("Unable to get selected part.");
@@ -262,36 +265,39 @@ sap.ui.define([
 
             if (oContext.isTransient()) { return; }                       // new rows are already editable
 
+            const sStatus = oContext.getProperty("approvalStatus");
+            if (sStatus === "SUBMITTED") {
+                MessageToast.show("This part is waiting for approval and cannot be edited.");
+                return;
+            }
+
             if (this._aEditContexts.indexOf(oContext) !== -1) { return; } // already in edit mode
- 
+
             this._aEditContexts.push(oContext);
 
             this._toggleEditCells(oItem, true);
 
         },
- 
+
         // Part Code (cell 0) is the key, so cells 1..5 become editable
+
 
         _toggleEditCells: function (oItem, bEdit) {
 
             const aCells = oItem.getCells();
- 
-            for (let i = 1; i <= 5; i++) {
 
+            EDITABLE_CELLS.forEach(function (i) {
                 const aChildren = aCells[i].getItems();
-
                 aChildren[0].setVisible(!bEdit);   // Text
-
                 aChildren[1].setVisible(bEdit);    // Input / DatePicker
-
-            }
+            });
 
         },
- 
+
         _exitEditMode: function () {
 
             const aItems = this.byId("partsTable").getItems();
- 
+
             this._aEditContexts.forEach(function (oContext) {
 
                 const oItem = aItems.find(function (oRow) {
@@ -303,21 +309,21 @@ sap.ui.define([
                 if (oItem) { this._toggleEditCells(oItem, false); }
 
             }.bind(this));
- 
+
             this._aEditContexts = [];
 
         },
- 
+
         // =====================================================
 
         // CANCEL (footer): discard new rows and edits
 
         // =====================================================
- 
+
         onCancel: function () {
 
             const oModel = this.getView().getModel();
- 
+
             if (!oModel.hasPendingChanges(UPDATE_GROUP) && this._aEditContexts.length === 0) {
 
                 MessageToast.show("Nothing to cancel.");
@@ -325,7 +331,7 @@ sap.ui.define([
                 return;
 
             }
- 
+
             oModel.resetChanges(UPDATE_GROUP);
 
             this._exitEditMode();
@@ -333,17 +339,17 @@ sap.ui.define([
             MessageToast.show("Changes discarded.");
 
         },
- 
+
         // =====================================================
 
         // SUBMIT (footer)
 
         // =====================================================
- 
+
         onSubmit: async function () {
 
             const oModel = this.getView().getModel();
- 
+
             const aNewContexts = this.byId("partsTable")
 
                 .getBinding("items")
@@ -351,7 +357,7 @@ sap.ui.define([
                 .getAllCurrentContexts()
 
                 .filter(function (oContext) { return oContext.isTransient(); });
- 
+
             if (aNewContexts.length === 0 && this._aEditContexts.length === 0) {
 
                 MessageToast.show("Nothing to submit.");
@@ -359,7 +365,7 @@ sap.ui.define([
                 return;
 
             }
- 
+
             // ---------- validation ----------
 
             const bNewInvalid = aNewContexts.some(function (oContext) {
@@ -367,7 +373,7 @@ sap.ui.define([
                 return !(oContext.getProperty("partCode") || "").trim();
 
             });
- 
+
             if (bNewInvalid) {
 
                 MessageBox.error("Part Code is required.");
@@ -375,7 +381,7 @@ sap.ui.define([
                 return;
 
             }
- 
+
             // duplicate Part Codes in the new rows
 
             const aCodes = aNewContexts.map(function (oContext) {
@@ -383,7 +389,7 @@ sap.ui.define([
                 return oContext.getProperty("partCode").trim();
 
             });
- 
+
             if (new Set(aCodes).size !== aCodes.length) {
 
                 MessageBox.error("Duplicate Part Codes found in the new rows.");
@@ -391,11 +397,23 @@ sap.ui.define([
                 return;
 
             }
- 
+
+
+
+            // new rows become SUBMITTED; saved rows only if the user actually changed something
+            aNewContexts.forEach(function (oContext) {
+                oContext.setProperty("approvalStatus", "SUBMITTED");
+            });
+            this._aEditContexts.forEach(function (oContext) {
+                if (oContext.hasPendingChanges()) {
+                    oContext.setProperty("approvalStatus", "SUBMITTED");
+                }
+            });
+
             // ---------- save ----------
 
             this.getView().setBusy(true);
- 
+
             // cleared inputs return "", but the service expects null
 
             aNewContexts.concat(this._aEditContexts).forEach(function (oContext) {
@@ -411,11 +429,11 @@ sap.ui.define([
                 });
 
             });
- 
+
             try {
 
                 await oModel.submitBatch(UPDATE_GROUP);
- 
+
                 // still pending => the backend rejected the request
 
                 if (oModel.hasPendingChanges(UPDATE_GROUP)) {
@@ -431,7 +449,7 @@ sap.ui.define([
                     return;
 
                 }
- 
+
                 this._exitEditMode();
 
                 MessageToast.show("Saved successfully.");
@@ -457,7 +475,7 @@ sap.ui.define([
             }
 
         },
- 
+
         // last backend error text from the message manager
 
         _getLastErrorMessage: function () {
@@ -475,7 +493,7 @@ sap.ui.define([
                     return oMessage.getType() === "Error";
 
                 });
- 
+
             return aMessages.length
 
                 ? aMessages[aMessages.length - 1].getMessage()
@@ -483,17 +501,17 @@ sap.ui.define([
                 : "";
 
         },
- 
+
         // =====================================================
 
         // DELETE
 
         // =====================================================
- 
+
         onDelete: function (oEvent) {
 
             const oContext = oEvent.getSource().getBindingContext();
- 
+
             if (!oContext) {
 
                 MessageBox.error("Unable to get selected part.");
@@ -501,7 +519,7 @@ sap.ui.define([
                 return;
 
             }
- 
+
             // new, unsaved row: just discard it
 
             if (oContext.isTransient()) {
@@ -511,23 +529,23 @@ sap.ui.define([
                 return;
 
             }
- 
+
             const sPartCode = oContext.getProperty("partCode");
- 
+
             MessageBox.confirm("Are you sure you want to delete part " + sPartCode + "?", {
 
                 title: "Delete Part",
- 
+
                 onClose: async function (sAction) {
 
                     if (sAction !== MessageBox.Action.OK) { return; }
- 
+
                     try {
 
                         // "$auto" = send immediately, do not wait for Submit
 
                         await oContext.delete("$auto");
- 
+
                         // drop from edit list if it was there
 
                         this._aEditContexts = this._aEditContexts.filter(function (oCtx) {
@@ -535,7 +553,7 @@ sap.ui.define([
                             return oCtx !== oContext;
 
                         });
- 
+
                         MessageToast.show("Part deleted successfully.");
 
                         this._loadFilterValues();
@@ -557,4 +575,3 @@ sap.ui.define([
     });
 
 });
- 
