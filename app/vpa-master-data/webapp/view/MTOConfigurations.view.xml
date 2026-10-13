@@ -126,100 +126,113 @@
                         <Column><Text text="MTO Model Code"/></Column>
                         <Column><Text text="Valid From"/></Column>
                         <Column><Text text="Reference MTS Model"/></Column>
-                        <Column width="8rem"><Text text="Actions"/></Column>
+                        <Column width="10rem"><Text text="Approval Status"/></Column>
+                        <Column width="6rem"><Text text="Actions"/></Column>
                     </columns>
 
                     <items>
-    <ColumnListItem type="Navigation" press=".onConfigurationPress">
-        <cells>
+                        <ColumnListItem type="Navigation" press=".onConfigurationPress">
+                            <cells>
 
-            <!-- [0] MTO model code: dropdown only on a new row -->
-            <VBox>
-                <Text
-                    text="{mtoModelCode}"
-                    visible="{= !%{@$ui5.context.isTransient} }"/>
-                <ComboBox
-                    width="100%"
-                    placeholder="Select MTO model"
-                    visible="{= !!%{@$ui5.context.isTransient} }"
-                    selectedKey="{mtoModelCode}"
-                    showSecondaryValues="true"
-                    filterSecondaryValues="true"
-                    items="{ path: 'modelsList>/mto', templateShareable: true }">
-                    <core:ListItem
-                        key="{modelsList>modelCode}"
-                        text="{modelsList>modelCode}"
-                        additionalText="{modelsList>modelDescription}"/>
-                </ComboBox>
-            </VBox>
+                                <!-- [0] MTO model code: dropdown only on a new row -->
+                                <VBox>
+                                    <Text
+                                        text="{mtoModelCode}"
+                                        visible="{= !%{@$ui5.context.isTransient} }"/>
+                                    <ComboBox
+                                        width="100%"
+                                        placeholder="Select MTO model"
+                                        visible="{= !!%{@$ui5.context.isTransient} }"
+                                        selectedKey="{mtoModelCode}"
+                                        showSecondaryValues="true"
+                                        filterSecondaryValues="true"
+                                        items="{ path: 'modelsList>/mto', templateShareable: true }">
+                                        <core:ListItem
+                                            key="{modelsList>modelCode}"
+                                            text="{modelsList>modelCode}"
+                                            additionalText="{modelsList>modelDescription}"/>
+                                    </ComboBox>
+                                </VBox>
 
-            <!-- [1] Valid From: items = [Text, DatePicker] -->
-            <VBox>
-                <Text
-                    text="{validFrom}"
-                    visible="{= !%{@$ui5.context.isTransient} }"/>
-                <DatePicker
-                    width="100%"
-                    valueFormat="yyyy-MM-dd"
-                    displayFormat="dd-MMM-yyyy"
-                    value="{validFrom}"
-                    visible="{= !!%{@$ui5.context.isTransient} }"/>
-            </VBox>
+                                <!-- [1] Valid From: items = [Text, DatePicker] -->
+                                <VBox>
+                                    <Text
+                                        text="{validFrom}"
+                                        visible="{= !%{@$ui5.context.isTransient} }"/>
+                                    <DatePicker
+                                        width="100%"
+                                        valueFormat="yyyy-MM-dd"
+                                        displayFormat="dd-MMM-yyyy"
+                                        value="{validFrom}"
+                                        visible="{= !!%{@$ui5.context.isTransient} }"/>
+                                </VBox>
 
-            <!-- [2] Reference MTS: items = [Text, ComboBox] -->
-            <VBox>
-                <Text
-                    text="{referenceMTSModel_modelCode}"
-                    visible="{= !%{@$ui5.context.isTransient} }"/>
-                <ComboBox
-                    width="100%"
-                    placeholder="Select reference MTS model"
-                    visible="{= !!%{@$ui5.context.isTransient} }"
-                    selectedKey="{referenceMTSModel_modelCode}"
-                    showSecondaryValues="true"
-                    filterSecondaryValues="true"
-                    items="{ path: 'modelsList>/mts', templateShareable: true }">
-                    <core:ListItem
-                        key="{modelsList>modelCode}"
-                        text="{modelsList>modelCode}"
-                        additionalText="{modelsList>modelDescription}"/>
-                </ComboBox>
-            </VBox>
+                                <!-- [2] Reference MTS: items = [Text, ComboBox] -->
+                                <VBox>
+                                    <Text
+                                        text="{referenceMTSModel_modelCode}"
+                                        visible="{= !%{@$ui5.context.isTransient} }"/>
+                                    <ComboBox
+                                        width="100%"
+                                        placeholder="Select reference MTS model"
+                                        visible="{= !!%{@$ui5.context.isTransient} }"
+                                        selectedKey="{referenceMTSModel_modelCode}"
+                                        showSecondaryValues="true"
+                                        filterSecondaryValues="true"
+                                        items="{ path: 'modelsList>/mts', templateShareable: true }">
+                                        <core:ListItem
+                                            key="{modelsList>modelCode}"
+                                            text="{modelsList>modelCode}"
+                                            additionalText="{modelsList>modelDescription}"/>
+                                    </ComboBox>
+                                </VBox>
 
-            <!-- [3] Actions: items = [Edit, Delete, Save, Cancel] (keep this order) -->
-            <HBox>
-                <Button
-                    icon="sap-icon://edit"
-                    type="Transparent"
-                    tooltip="Edit"
-                    press=".onEditRow"
-                    visible="{= !%{@$ui5.context.isTransient} }"/>
-                <Button
-                    icon="sap-icon://delete"
-                    type="Transparent"
-                    tooltip="Delete"
-                    press=".onDelete"
-                    visible="{= !%{@$ui5.context.isTransient} }"/>
-                <Button
-                    icon="sap-icon://accept"
-                    type="Emphasized"
-                    tooltip="Save"
-                    press=".onSaveRow"
-                    visible="{= !!%{@$ui5.context.isTransient} }"/>
-                <Button
-                    icon="sap-icon://decline"
-                    type="Transparent"
-                    tooltip="Cancel"
-                    press=".onCancelRow"
-                    visible="{= !!%{@$ui5.context.isTransient} }"/>
-            </HBox>
+                                <!-- [3] Approval status (read-only) -->
+                                <ObjectStatus
+                                    text="{approvalStatus}"
+                                    state="{= ${path: 'approvalStatus', targetType: 'any'} === 'APPROVED' ? 'Success'
+                                            : ${path: 'approvalStatus', targetType: 'any'} === 'SUBMITTED' ? 'Warning'
+                                            : 'None' }"/>
 
-        </cells>
-    </ColumnListItem>
-</items>
+                                <!-- [4] Actions: items = [Edit, Delete] -->
+                                <HBox>
+                                    <Button
+                                        icon="sap-icon://edit"
+                                        type="Transparent"
+                                        tooltip="Edit"
+                                        press=".onEditRow"
+                                        enabled="{= ${path: 'approvalStatus', targetType: 'any'} !== 'SUBMITTED' }"
+                                        visible="{= !%{@$ui5.context.isTransient} }"/>
+                                    <Button
+                                        icon="sap-icon://delete"
+                                        type="Transparent"
+                                        tooltip="Delete"
+                                        press=".onDelete"
+                                        enabled="{= ${path: 'approvalStatus', targetType: 'any'} !== 'SUBMITTED' }"/>
+                                </HBox>
+
+                            </cells>
+                        </ColumnListItem>
+                    </items>
                 </Table>
 
             </VBox>
         </content>
+
+        <!-- ================= FOOTER ================= -->
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    text="Submit"
+                    type="Emphasized"
+                    icon="sap-icon://paper-plane"
+                    press=".onSubmit"/>
+                <Button
+                    text="Cancel"
+                    press=".onCancel"/>
+            </OverflowToolbar>
+        </footer>
+
     </Page>
 </mvc:View>
