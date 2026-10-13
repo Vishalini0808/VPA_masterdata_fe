@@ -176,10 +176,10 @@
 <Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Part Code"/></Column>
 <Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Valid From"/></Column>
 <Column width="10rem" hAlign="Begin"  vAlign="Middle"><Text text="Description"/></Column>
-<Column width="9rem"  hAlign="Begin" vAlign="Middle"><Text text="Status"/></Column>
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="MIY Cost"/></Column>
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="MIY Markup"/></Column>
 <Column width="9rem"  hAlign="Begin"  vAlign="Middle"><Text text="Price Indicator"/></Column>
+<Column width="9rem"  hAlign="Begin" vAlign="Middle"><Text text="Status"/></Column>
 <Column width="7rem"  hAlign="Center" vAlign="Middle"><Text text="Actions"/></Column>
 </columns>
  
@@ -243,13 +243,7 @@
 </VBox>
 
 
-<!-- 3 APPROVAL STATUS (read-only) -->
-<ObjectStatus
-    text="{approvalStatus}"
-    state="{= ${approvalStatus} === 'APPROVED' ? 'Success'
-            : ${approvalStatus} === 'SUBMITTED' ? 'Warning'
-            : ${approvalStatus} === 'REJECTED' ? 'Error'
-            : 'None' }"/>
+
  
                                     <!-- 4 MIY COST -->
 <VBox>
@@ -310,6 +304,14 @@
 
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
 </VBox>
+
+<!-- 3 APPROVAL STATUS (read-only) -->
+<ObjectStatus
+    text="{approvalStatus}"
+    state="{= ${approvalStatus} === 'APPROVED' ? 'Success'
+            : ${approvalStatus} === 'SUBMITTED' ? 'Warning'
+            : ${approvalStatus} === 'REJECTED' ? 'Error'
+            : 'None' }"/>
  
                                     <!-- 7 ACTIONS (edit only makes sense on saved rows) -->
 <HBox justifyContent="Center">
