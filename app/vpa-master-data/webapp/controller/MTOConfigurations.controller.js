@@ -10,7 +10,9 @@ sap.ui.define([
 
     "use strict";
 
-    const GROUP = "mtoGroup"; // deferred group: nothing is sent until Save is pressed
+    const GROUP = "mtoGroup";          // must match $$updateGroupId in the view
+    const EDITABLE_CELLS = [1, 2];     // Valid From, Reference MTS (code is the key)
+    const STATUS = { DRAFT: "DRAFT", SUBMITTED: "SUBMITTED" };
 
     return Controller.extend("vpamasterdata.controller.MTOConfigurations", {
 
@@ -19,13 +21,12 @@ sap.ui.define([
         // =========================
 
         onInit: function () {
-            this.getView().setModel(new JSONModel({ editKey: "", count: 0 }), "viewModel");
+            this._aEditContexts = []; // existing rows currently in edit mode
+            this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
             this.getView().setModel(new JSONModel({ mto: [], mts: [], configured: [] }), "modelsList");
             this._loadModels();
         },
 
-        // Dropdown data: MTO models without a configuration yet, all MTS models,
-        // and the codes that already have a configuration (for the filter bar)
         _loadModels: function () {
             const oModel = this.getOwnerComponent().getModel();
 
@@ -50,17 +51,20 @@ sap.ui.define([
                     mts: aMts,
                     configured: aConfigs.map((o) => ({ modelCode: o.mtoModelCode }))
                 });
+
+                console.log("MTO:", aMto.length, "MTS:", aMts.length, "Used:", oUsed.size,
+            "Dropdown:", this.getView().getModel("modelsList").getData().mto.length);
+            
             }).catch((oError) => console.error("Loading models failed", oError));
         },
 
         _isEditing: function () {
-            const oViewModel = this.getView().getModel("viewModel");
-            return !!oViewModel.getProperty("/editKey") ||
+            return this._aEditContexts.length > 0 ||
                 this.getView().getModel().hasPendingChanges(GROUP);
         },
 
         _warnEditing: function () {
-            MessageToast.show("Save or cancel the row you are editing first.");
+            MessageToast.show("Submit or cancel your unsaved changes first.");
         },
 
         // =========================
@@ -72,12 +76,12 @@ sap.ui.define([
         },
 
         onConfigurationPress: function (oEvent) {
+            const oContext = oEvent.getSource().getBindingContext();
+            if (oContext.isTransient()) { return; }
             if (this._isEditing()) { this._warnEditing(); return; }
 
-            const sMTOModelCode = oEvent.getSource().getBindingContext().getProperty("mtoModelCode");
-
             this.getOwnerComponent().getRouter().navTo("MTOConfigurationObject", {
-                mtoModelCode: encodeURIComponent(sMTOModelCode)
+                mtoModelCode: encodeURIComponent(oContext.getProperty("mtoModelCode"))
             });
         },
 
@@ -103,10 +107,8 @@ sap.ui.define([
                 aFilters.push(new Filter("validFrom", FilterOperator.EQ, sValidFrom));
             }
 
-            const oBinding = this.byId("mtoConfigurationsTable").getBinding("items");
-            if (oBinding) {
-                oBinding.filter(aFilters, FilterType.Application);
-            }
+            this.byId("mtoConfigurationsTable").getBinding("items")
+                .filter(aFilters, FilterType.Application);
         },
 
         onClearFilters: function () {
@@ -116,10 +118,7 @@ sap.ui.define([
             this.byId("mtoReferenceMTSFilter").setSelectedKey("");
             this.byId("mtoValidFromFilter").setValue("");
 
-            const oBinding = this.byId("mtoConfigurationsTable").getBinding("items");
-            if (oBinding) {
-                oBinding.filter([]);
-            }
+            this.byId("mtoConfigurationsTable").getBinding("items").filter([]);
         },
 
         onRefresh: function () {
@@ -135,132 +134,188 @@ sap.ui.define([
         },
 
         // =========================
-        // ADD ROW (inline)
+        // ADD / EDIT (inline, several rows at once)
         // =========================
 
         onAdd: function () {
-            if (this._isEditing()) { this._warnEditing(); return; }
-
-            this._loadModels(); // refresh dropdowns
+            this._loadModels();
 
             const oBinding = this.byId("mtoConfigurationsTable").getBinding("items");
 
-            // new row appears at the top in edit mode (a created row is "transient")
-            const oContext = oBinding.create({ validFrom: null }, true, false, false);
+            // new row at the top, in edit mode (created rows are "transient"), starts as DRAFT
+            const oContext = oBinding.create(
+                { validFrom: null, approvalStatus: STATUS.DRAFT }, true, false, false);
             oContext.created().catch(() => { /* rejected when the row is cancelled */ });
         },
 
         onEditRow: function (oEvent) {
-            if (this._isEditing()) { this._warnEditing(); return; }
+            const oItem = oEvent.getSource().getParent().getParent(); // Button -> HBox -> ColumnListItem
+            const oContext = oItem.getBindingContext();
 
-            this._loadModels(); // refresh dropdowns
+            if (!oContext || oContext.isTransient()) { return; }
 
-            const oButton = oEvent.getSource();
-            const oContext = oButton.getBindingContext();
-            const oItem = oButton.getParent().getParent(); // Button -> HBox -> ColumnListItem
+            if (oContext.getProperty("approvalStatus") === STATUS.SUBMITTED) {
+                MessageToast.show("This configuration is waiting for approval and cannot be edited.");
+                return;
+            }
+            if (this._aEditContexts.indexOf(oContext) !== -1) { return; }
 
-            this.getView().getModel("viewModel")
-                .setProperty("/editKey", oContext.getProperty("mtoModelCode"));
-            this._setRowEdit(oItem, true);
+            this._loadModels();
+            this._aEditContexts.push(oContext);
+            this._toggleEditCells(oItem, true);
         },
 
-        onSaveRow: async function (oEvent) {
-            const oButton = oEvent.getSource();
-            const oContext = oButton.getBindingContext();
-            const oItem = oButton.getParent().getParent();
-            const oModel = this.getView().getModel();
-            const bNew = oContext.isTransient();
+        _toggleEditCells: function (oItem, bEdit) {
+            const aCells = oItem.getCells();
+            EDITABLE_CELLS.forEach((i) => {
+                const aItems = aCells[i].getItems(); // [Text, editor]
+                aItems[0].setVisible(!bEdit);
+                aItems[1].setVisible(bEdit);
+            });
+        },
 
-            if (!oContext.getProperty("mtoModelCode")) {
-                MessageBox.error("Please select an MTO model.");
+        _exitEditMode: function () {
+            const aItems = this.byId("mtoConfigurationsTable").getItems();
+            this._aEditContexts.forEach((oContext) => {
+                const oItem = aItems.find((oRow) => oRow.getBindingContext() === oContext);
+                if (oItem) { this._toggleEditCells(oItem, false); }
+            });
+            this._aEditContexts = [];
+        },
+
+        // =========================
+        // CANCEL (footer)
+        // =========================
+
+        onCancel: function () {
+            const oModel = this.getView().getModel();
+
+            if (!oModel.hasPendingChanges(GROUP) && this._aEditContexts.length === 0) {
+                MessageToast.show("Nothing to cancel.");
                 return;
             }
-            if (!oContext.getProperty("referenceMTSModel_modelCode")) {
-                MessageBox.error("Please select a reference MTS model.");
+
+            // discards edits of existing rows and removes new unsaved rows
+            oModel.resetChanges(GROUP);
+            this._exitEditMode();
+            MessageToast.show("Changes discarded.");
+        },
+
+        // =========================
+        // SUBMIT (footer)
+        // =========================
+
+        onSubmit: async function () {
+            const oModel = this.getView().getModel();
+
+            const aNew = this.byId("mtoConfigurationsTable").getBinding("items")
+                .getAllCurrentContexts()
+                .filter((oCtx) => oCtx.isTransient());
+
+            if (aNew.length === 0 && this._aEditContexts.length === 0) {
+                MessageToast.show("Nothing to submit.");
                 return;
             }
+
+            // ---------- validation ----------
+            if (aNew.some((oCtx) => !oCtx.getProperty("mtoModelCode"))) {
+                MessageBox.error("Please select an MTO model for every new row.");
+                return;
+            }
+            if (aNew.concat(this._aEditContexts)
+                    .some((oCtx) => !oCtx.getProperty("referenceMTSModel_modelCode"))) {
+                MessageBox.error("Please select a reference MTS model for every row.");
+                return;
+            }
+            const aCodes = aNew.map((oCtx) => oCtx.getProperty("mtoModelCode"));
+            if (new Set(aCodes).size !== aCodes.length) {
+                MessageBox.error("The same MTO model is selected in more than one new row.");
+                return;
+            }
+
+            // ---------- status + cleanup ----------
+            // remember the old status so it can be restored if the save fails
+            const mOldStatus = new Map();
+
+            aNew.forEach((oCtx) => {
+                mOldStatus.set(oCtx, STATUS.DRAFT);
+                oCtx.setProperty("approvalStatus", STATUS.SUBMITTED);
+            });
+            this._aEditContexts.forEach((oCtx) => {
+                // existing rows only go back to approval if something actually changed
+                if (oCtx.hasPendingChanges()) {
+                    mOldStatus.set(oCtx, oCtx.getProperty("approvalStatus"));
+                    oCtx.setProperty("approvalStatus", STATUS.SUBMITTED);
+                }
+            });
 
             // a cleared date picker returns "", but the service expects null
-            if (oContext.getProperty("validFrom") === "") {
-                oContext.setProperty("validFrom", null);
-            }
+            aNew.concat(this._aEditContexts).forEach((oCtx) => {
+                if (oCtx.getProperty("validFrom") === "") {
+                    oCtx.setProperty("validFrom", null);
+                }
+            });
 
-            let sError = "";
+            // ---------- save ----------
+            const fnRestoreStatus = () => mOldStatus.forEach((sOld, oCtx) => {
+                oCtx.setProperty("approvalStatus", sOld);
+            });
+
+            this.getView().setBusy(true);
             try {
                 await oModel.submitBatch(GROUP);
+
+                if (oModel.hasPendingChanges(GROUP)) { // server rejected it
+                    fnRestoreStatus();
+                    MessageBox.error("Submit failed. Please check the entries and try again.");
+                    return;
+                }
+
+                this._exitEditMode();
+                MessageToast.show("Submitted for approval.");
+                this._loadModels(); // used MTO codes must disappear from the dropdown
             } catch (oError) {
                 console.error(oError);
-                sError = oError && oError.message;
+                fnRestoreStatus();
+                MessageBox.error((oError && oError.message) || "Failed to submit.");
+            } finally {
+                this.getView().setBusy(false);
             }
-
-            // anything still pending means the server rejected it; the row stays in edit mode
-            if (oModel.hasPendingChanges(GROUP)) {
-                MessageBox.error(sError || "Save failed. Please check the entries and try again.");
-                return;
-            }
-
-            if (!bNew) { this._setRowEdit(oItem, false); }
-            this.getView().getModel("viewModel").setProperty("/editKey", "");
-            MessageToast.show("MTO Configuration saved.");
-            this._loadModels(); // the used MTO code must disappear from the dropdown
         },
-
-        onCancelRow: function (oEvent) {
-            const oButton = oEvent.getSource();
-            const oContext = oButton.getBindingContext();
-            const oItem = oButton.getParent().getParent();
-            const bNew = oContext.isTransient();
-
-            // resets edits of an existing row and removes a new unsaved row
-            this.getView().getModel().resetChanges(GROUP);
-
-            if (!bNew) { this._setRowEdit(oItem, false); }
-            this.getView().getModel("viewModel").setProperty("/editKey", "");
-        },
-
 
         // =========================
         // DELETE
         // =========================
 
         onDelete: function (oEvent) {
-            if (this._isEditing()) { this._warnEditing(); return; }
-
             const oContext = oEvent.getSource().getBindingContext();
+
+            // new, unsaved row: just discard it
+            if (oContext.isTransient()) {
+                oContext.delete("$auto");
+                return;
+            }
+
+            if (oContext.getProperty("approvalStatus") === STATUS.SUBMITTED) {
+                MessageToast.show("This configuration is waiting for approval and cannot be deleted.");
+                return;
+            }
 
             MessageBox.confirm("Are you sure you want to delete this MTO Configuration?", {
                 title: "Confirm Delete",
                 onClose: async (sAction) => {
                     if (sAction !== MessageBox.Action.OK) { return; }
                     try {
-                        // "$auto": delete right away, not on the deferred Save group
-                        await oContext.delete("$auto");
+                        await oContext.delete("$auto"); // immediate, not part of the Submit batch
+                        this._aEditContexts = this._aEditContexts.filter((o) => o !== oContext);
                         MessageToast.show("MTO Configuration deleted successfully.");
-                        this._loadModels(); // the MTO code is selectable again
+                        this._loadModels();
                     } catch (oError) {
                         console.error(oError);
                         MessageBox.error(oError.message || "Delete failed.");
                     }
                 }
             });
-        },
-        // Switches an EXISTING row between display and edit mode.
-        // (A new row switches automatically because it is transient.)
-        _setRowEdit: function (oItem, bEdit) {
-            if (!oItem || !oItem.getCells) { return; }
-            const aCells = oItem.getCells();
-
-            [1, 2].forEach((i) => {
-                const aItems = aCells[i].getItems(); // [Text, editor]
-                aItems[0].setVisible(!bEdit);
-                aItems[1].setVisible(bEdit);
-            });
-
-            const aBtns = aCells[3].getItems(); // [Edit, Delete, Save, Cancel]
-            aBtns[0].setVisible(!bEdit);
-            aBtns[1].setVisible(!bEdit);
-            aBtns[2].setVisible(bEdit);
-            aBtns[3].setVisible(bEdit);
-        },
+        }
     });
 });
