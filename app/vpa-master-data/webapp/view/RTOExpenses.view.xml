@@ -222,13 +222,18 @@
                                             text="{region_regionCode}"
 
                                             visible="{= !%{@$ui5.context.isTransient} }"/>
-<Input
+<Select
+    selectedKey="{region_regionCode}"
+    width="100%"
+    forceSelection="false"
+    visible="{= !!%{@$ui5.context.isTransient} }"
+    items="{path: '/Regions'}">
 
-                                            value="{region_regionCode}"
+    <core:Item
+        key="{regionCode}"
+        text="{regionName}"/>
 
-                                            placeholder="Region code"
-
-                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</Select>
 </VBox>
  
                                     <!-- 1 SLAB (key: editable only on new rows) -->
@@ -380,7 +385,7 @@
                                             press=".onEdit"
 
                                             visible="{= !%{@$ui5.context.isTransient} }"/>
-<Button
+<!-- <Button
 
                                             icon="sap-icon://delete"
 
@@ -388,7 +393,7 @@
 
                                             tooltip="Delete"
 
-                                            press=".onDelete"/>
+                                            press=".onDelete"/> -->
 </HBox>
  
                                 </cells>

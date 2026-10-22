@@ -206,7 +206,7 @@
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Minimum Price"/></Column>
 <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Maximum Price"/></Column>
 <Column width="7rem"  hAlign="End"    vAlign="Middle"><Text text="RTO %"/></Column>
-<Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Flat Price"/></Column>
+<!-- <Column width="9rem"  hAlign="End"    vAlign="Middle"><Text text="Flat Price"/></Column> -->
 <Column width="10rem" hAlign="Center" vAlign="Middle"><Text text="Approval Status"/></Column>
 <Column width="7rem"  hAlign="Center" vAlign="Middle"><Text text="Actions"/></Column>
 </columns>
@@ -225,13 +225,18 @@
                                             text="{region_regionCode}"
 
                                             visible="{= !%{@$ui5.context.isTransient} }"/>
-<Input
+<Select
+    selectedKey="{region_regionCode}"
+    width="100%"
+    forceSelection="false"
+    visible="{= !!%{@$ui5.context.isTransient} }"
+    items="{path: '/Regions'}">
 
-                                            value="{region_regionCode}"
+    <core:Item
+        key="{regionCode}"
+        text="{regionName}"/>
 
-                                            placeholder="Region code"
-
-                                            visible="{= !!%{@$ui5.context.isTransient} }"/>
+</Select>
 </VBox>
  
                                     <!-- 1 VALID FROM -->
@@ -406,7 +411,7 @@
 </VBox>
  
                                     <!-- 9 FLAT PRICE -->
-<VBox>
+<!-- <VBox>
 <Text
 
                                             width="100%"
@@ -425,7 +430,7 @@
                                             textAlign="End"
 
                                             visible="{= !!%{@$ui5.context.isTransient} }"/>
-</VBox>
+</VBox> -->
  
                                     <!-- 10 APPROVAL STATUS (set by the system) -->
 <ObjectStatus
@@ -447,7 +452,7 @@
                                             press=".onEdit"
 
                                             visible="{= !%{@$ui5.context.isTransient} }"/>
-<Button
+<!-- <Button
 
                                             icon="sap-icon://delete"
 
@@ -455,7 +460,7 @@
 
                                             tooltip="Delete"
 
-                                            press=".onDelete"/>
+                                            press=".onDelete"/> -->
 </HBox>
  
                                 </cells>

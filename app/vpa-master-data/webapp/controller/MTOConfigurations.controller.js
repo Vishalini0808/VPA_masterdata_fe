@@ -1,3 +1,4 @@
+
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -5,317 +6,703 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/FilterType"
-], function (Controller, JSONModel, MessageToast, MessageBox, Filter, FilterOperator, FilterType) {
-
+    "sap/ui/model/FilterType",
+    "sap/ui/core/BusyIndicator"
+], function (
+    Controller,
+    JSONModel,
+    MessageToast,
+    MessageBox,
+    Filter,
+    FilterOperator,
+    FilterType,
+    BusyIndicator
+) {
     "use strict";
 
-    const GROUP = "mtoGroup";          // must match $$updateGroupId in the view
-    const EDITABLE_CELLS = [1, 2];     // Valid From, Reference MTS (code is the key)
-    const STATUS = { DRAFT: "DRAFT", SUBMITTED: "SUBMITTED" };
+    const LIST_ROUTE = "mtoConfigurations";
+    const CREATE_ROUTE = "MTOConfigurationCreate";
+    const OBJECT_ROUTE = "MTOConfigurationObject";
 
-    return Controller.extend("vpamasterdata.controller.MTOConfigurations", {
+    return Controller.extend(
+        "vpamasterdata.controller.MTOConfigurations", {
 
         // =========================
         // INIT
         // =========================
 
         onInit: function () {
-            this._aEditContexts = []; // existing rows currently in edit mode
-            this.getView().setModel(new JSONModel({ count: 0 }), "viewModel");
-            this.getView().setModel(new JSONModel({ mto: [], mts: [], configured: [] }), "modelsList");
+
+            this.getView().setModel(
+                new JSONModel({
+                    count: 0,
+                    isCreating: false
+                }),
+                "viewModel"
+            );
+
+            this.getView().setModel(
+                new JSONModel({
+                    mto: [],
+                    mts: [],
+                    configured: []
+                }),
+                "modelsList"
+            );
+
+            this.getView().setModel(
+                new JSONModel({
+                    rows: []
+                }),
+                "createHeader"
+            );
+
+            this._loadModels();
+
+            // Refresh the list when returning from the Object Page.
+            const oRoute = this.getOwnerComponent()
+                .getRouter()
+                .getRoute(LIST_ROUTE);
+
+            oRoute.attachPatternMatched(
+                this._onListMatched,
+                this
+            );
+        },
+
+        // =========================
+        // ROUTE MATCHED
+        // =========================
+
+        _onListMatched: function () {
+
+            const oViewModel = this.getView()
+                .getModel("viewModel");
+
+            oViewModel.setProperty(
+                "/isCreating",
+                false
+            );
+
+            this.getView()
+                .getModel("createHeader")
+                .setProperty("/rows", []);
+
+            const oBinding = this.byId("mtoConfigurationsTable")
+                .getBinding("items");
+
+            if (oBinding) {
+                oBinding.refresh();
+            }
+
             this._loadModels();
         },
 
-        _loadModels: function () {
-            const oModel = this.getOwnerComponent().getModel();
+        // =========================
+        // LOAD MODELS
+        // =========================
 
-            const fnRead = (sPath, mParams, aFilters) =>
-                oModel.bindList(sPath, null, null, aFilters, mParams)
+        _loadModels: function () {
+
+            const oModel = this.getOwnerComponent()
+                .getModel();
+
+            const fnRead = (sPath, mParams, aFilters) => {
+
+                return oModel.bindList(
+                    sPath,
+                    null,
+                    null,
+                    aFilters || [],
+                    mParams
+                )
                     .requestContexts(0, 5000)
-                    .then((aCtx) => aCtx.map((oCtx) => ({ ...oCtx.getObject() })));
+                    .then(aContexts => {
+
+                        return aContexts.map(oContext => ({
+                            ...oContext.getObject()
+                        }));
+
+                    });
+            };
 
             const mModelParams = {
-                $select: "modelCode,modelDescription,orderType",
+                $select:
+                    "modelCode,modelDescription,orderType,approvalStatus",
+
                 $orderby: "modelCode"
             };
 
             return Promise.all([
-                fnRead("/Models", mModelParams, [new Filter("orderType", FilterOperator.EQ, "MTO")]),
-                fnRead("/Models", mModelParams, [new Filter("orderType", FilterOperator.EQ, "MTS")]),
-                fnRead("/MTOConfigurations", { $select: "mtoModelCode" })
+
+                // Approved MTO models
+                fnRead(
+                    "/Models",
+                    mModelParams,
+                    [
+                        new Filter(
+                            "orderType",
+                            FilterOperator.EQ,
+                            "MTO"
+                        ),
+                        new Filter(
+                            "approvalStatus",
+                            FilterOperator.EQ,
+                            "APPROVED"
+                        )
+                    ]
+                ),
+
+                // Reference MTS models
+                fnRead(
+                    "/Models",
+                    mModelParams,
+                    [
+                        new Filter(
+                            "orderType",
+                            FilterOperator.EQ,
+                            "MTS"
+                        )
+                    ]
+                ),
+
+                // Already configured MTO models
+                fnRead(
+                    "/MTOConfigurations",
+                    {
+                        $select: "mtoModelCode"
+                    },
+                    []
+                )
+
             ]).then(([aMto, aMts, aConfigs]) => {
-                const oUsed = new Set(aConfigs.map((o) => o.mtoModelCode));
-                this.getView().getModel("modelsList").setData({
-                    mto: aMto.filter((o) => !oUsed.has(o.modelCode)),
-                    mts: aMts,
-                    configured: aConfigs.map((o) => ({ modelCode: o.mtoModelCode }))
-                });
 
-                console.log("MTO:", aMto.length, "MTS:", aMts.length, "Used:", oUsed.size,
-            "Dropdown:", this.getView().getModel("modelsList").getData().mto.length);
-            
-            }).catch((oError) => console.error("Loading models failed", oError));
-        },
+                const oUsed = new Set(
+                    aConfigs.map(oConfig =>
+                        oConfig.mtoModelCode
+                    )
+                );
 
-        _isEditing: function () {
-            return this._aEditContexts.length > 0 ||
-                this.getView().getModel().hasPendingChanges(GROUP);
-        },
+                // Only MTO models without configurations
+                const aAvailableMto = aMto.filter(
+                    oMto => !oUsed.has(oMto.modelCode)
+                );
 
-        _warnEditing: function () {
-            MessageToast.show("Submit or cancel your unsaved changes first.");
+                const aConfigured = aConfigs.map(
+                    oConfig => ({
+                        modelCode: oConfig.mtoModelCode
+                    })
+                );
+
+                this.getView()
+                    .getModel("modelsList")
+                    .setData({
+
+                        mto: aAvailableMto,
+
+                        mts: aMts,
+
+                        configured: aConfigured
+
+                    });
+
+                console.log(
+                    "Available MTO:",
+                    aAvailableMto.length,
+                    "MTS:",
+                    aMts.length,
+                    "Configured:",
+                    aConfigured.length
+                );
+
+            }).catch(oError => {
+
+                console.error(
+                    "Loading MTO configuration models failed:",
+                    oError
+                );
+
+                MessageBox.error(
+                    "Unable to load model details. Please refresh."
+                );
+
+            });
         },
 
         // =========================
-        // NAVIGATION
+        // CREATE MODE HELPERS
+        // =========================
+
+        _isCreating: function () {
+
+            return this.getView()
+                .getModel("viewModel")
+                .getProperty("/isCreating");
+        },
+
+        _clearCreateHeader: function () {
+
+            this.getView()
+                .getModel("createHeader")
+                .setProperty("/rows", []);
+
+            this.getView()
+                .getModel("viewModel")
+                .setProperty("/isCreating", false);
+        },
+
+        _hasCreateData: function () {
+
+            const aRows = this.getView()
+                .getModel("createHeader")
+                .getProperty("/rows") || [];
+
+            if (!aRows.length) {
+                return false;
+            }
+
+            const oHeader = aRows[0];
+
+            return !!(
+                oHeader.mtoModelCode ||
+                oHeader.referenceMTSModel_modelCode ||
+                oHeader.validFrom
+            );
+        },
+
+        // =========================
+        // BACK NAVIGATION
         // =========================
 
         onNavBack: function () {
-            this.getOwnerComponent().getRouter().navTo("RouteView1");
-        },
 
-        onConfigurationPress: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
-            if (oContext.isTransient()) { return; }
-            if (this._isEditing()) { this._warnEditing(); return; }
+            if (!this._isCreating()) {
 
-            this.getOwnerComponent().getRouter().navTo("MTOConfigurationObject", {
-                mtoModelCode: encodeURIComponent(oContext.getProperty("mtoModelCode"))
-            });
+                this.getOwnerComponent()
+                    .getRouter()
+                    .navTo("RouteView1");
+
+                return;
+            }
+
+            // New row exists but nothing has been entered
+            if (!this._hasCreateData()) {
+
+                this._clearCreateHeader();
+
+                this.getOwnerComponent()
+                    .getRouter()
+                    .navTo("RouteView1");
+
+                return;
+            }
+
+            MessageBox.confirm(
+                "You have an unfinished MTO configuration. Discard it?",
+                {
+                    title: "Discard Configuration",
+
+                    onClose: sAction => {
+
+                        if (sAction !== MessageBox.Action.OK) {
+                            return;
+                        }
+
+                        this._clearCreateHeader();
+
+                        this.getOwnerComponent()
+                            .getRouter()
+                            .navTo("RouteView1");
+                    }
+                }
+            );
         },
 
         // =========================
-        // FILTER / REFRESH
-        // =========================
-
-        onFilter: function () {
-            if (this._isEditing()) { this._warnEditing(); return; }
-
-            const aFilters = [];
-            const sMTOModelCode = this.byId("mtoModelCodeFilter").getSelectedKey();
-            const sReferenceMTS = this.byId("mtoReferenceMTSFilter").getSelectedKey();
-            const sValidFrom = this.byId("mtoValidFromFilter").getValue();
-
-            if (sMTOModelCode) {
-                aFilters.push(new Filter("mtoModelCode", FilterOperator.EQ, sMTOModelCode));
-            }
-            if (sReferenceMTS) {
-                aFilters.push(new Filter("referenceMTSModel_modelCode", FilterOperator.EQ, sReferenceMTS));
-            }
-            if (sValidFrom) {
-                aFilters.push(new Filter("validFrom", FilterOperator.EQ, sValidFrom));
-            }
-
-            this.byId("mtoConfigurationsTable").getBinding("items")
-                .filter(aFilters, FilterType.Application);
-        },
-
-        onClearFilters: function () {
-            if (this._isEditing()) { this._warnEditing(); return; }
-
-            this.byId("mtoModelCodeFilter").setSelectedKey("");
-            this.byId("mtoReferenceMTSFilter").setSelectedKey("");
-            this.byId("mtoValidFromFilter").setValue("");
-
-            this.byId("mtoConfigurationsTable").getBinding("items").filter([]);
-        },
-
-        onRefresh: function () {
-            if (this._isEditing()) { this._warnEditing(); return; }
-
-            this.byId("mtoConfigurationsTable").getBinding("items").refresh();
-            this._loadModels();
-        },
-
-        onTableUpdateFinished: function (oEvent) {
-            this.getView().getModel("viewModel")
-                .setProperty("/count", oEvent.getParameter("total") || 0);
-        },
-
-        // =========================
-        // ADD / EDIT (inline, several rows at once)
+        // ADD NEW CONFIGURATION
         // =========================
 
         onAdd: function () {
+
+            if (this._isCreating()) {
+
+                MessageToast.show(
+                    "Please complete or cancel the current configuration."
+                );
+
+                return;
+            }
+
+            const oCreateHeader = this.getView()
+                .getModel("createHeader");
+
+            // One temporary JSON row
+            oCreateHeader.setProperty(
+                "/rows",
+                [
+                    {
+                        mtoModelCode: "",
+                        referenceMTSModel_modelCode: "",
+                        validFrom: "",
+                        approvalStatus: "DRAFT"
+                    }
+                ]
+            );
+
+            this.getView()
+                .getModel("viewModel")
+                .setProperty("/isCreating", true);
+
+            // Refresh dropdown options
             this._loadModels();
-
-            const oBinding = this.byId("mtoConfigurationsTable").getBinding("items");
-
-            // new row at the top, in edit mode (created rows are "transient"), starts as DRAFT
-            const oContext = oBinding.create(
-                { validFrom: null, approvalStatus: STATUS.DRAFT }, true, false, false);
-            oContext.created().catch(() => { /* rejected when the row is cancelled */ });
-        },
-
-        onEditRow: function (oEvent) {
-            const oItem = oEvent.getSource().getParent().getParent(); // Button -> HBox -> ColumnListItem
-            const oContext = oItem.getBindingContext();
-
-            if (!oContext || oContext.isTransient()) { return; }
-
-            if (oContext.getProperty("approvalStatus") === STATUS.SUBMITTED) {
-                MessageToast.show("This configuration is waiting for approval and cannot be edited.");
-                return;
-            }
-            if (this._aEditContexts.indexOf(oContext) !== -1) { return; }
-
-            this._loadModels();
-            this._aEditContexts.push(oContext);
-            this._toggleEditCells(oItem, true);
-        },
-
-        _toggleEditCells: function (oItem, bEdit) {
-            const aCells = oItem.getCells();
-            EDITABLE_CELLS.forEach((i) => {
-                const aItems = aCells[i].getItems(); // [Text, editor]
-                aItems[0].setVisible(!bEdit);
-                aItems[1].setVisible(bEdit);
-            });
-        },
-
-        _exitEditMode: function () {
-            const aItems = this.byId("mtoConfigurationsTable").getItems();
-            this._aEditContexts.forEach((oContext) => {
-                const oItem = aItems.find((oRow) => oRow.getBindingContext() === oContext);
-                if (oItem) { this._toggleEditCells(oItem, false); }
-            });
-            this._aEditContexts = [];
         },
 
         // =========================
-        // CANCEL (footer)
+        // NEW CONFIGURATION NAVIGATION
         // =========================
 
-        onCancel: function () {
-            const oModel = this.getView().getModel();
+        onCreateConfigurationPress: function () {
 
-            if (!oModel.hasPendingChanges(GROUP) && this._aEditContexts.length === 0) {
-                MessageToast.show("Nothing to cancel.");
+            const oCreateHeader = this.getView()
+                .getModel("createHeader");
+
+            const aRows =
+                oCreateHeader.getProperty("/rows") || [];
+
+            if (!aRows.length) {
+
+                MessageBox.error(
+                    "New configuration header not found."
+                );
+
                 return;
             }
 
-            // discards edits of existing rows and removes new unsaved rows
-            oModel.resetChanges(GROUP);
-            this._exitEditMode();
-            MessageToast.show("Changes discarded.");
+            const oHeader = {
+                ...aRows[0]
+            };
+
+            // MTO MODEL VALIDATION
+            if (!oHeader.mtoModelCode) {
+
+                MessageBox.warning(
+                    "Please select an MTO Model."
+                );
+
+                return;
+            }
+
+            // REFERENCE MTS VALIDATION
+            if (!oHeader.referenceMTSModel_modelCode) {
+
+                MessageBox.warning(
+                    "Please select a Reference MTS Model."
+                );
+
+                return;
+            }
+
+            // VALID FROM VALIDATION
+            if (!oHeader.validFrom) {
+
+                MessageBox.warning(
+                    "Please select Valid From."
+                );
+
+                return;
+            }
+
+            // Check whether selected MTO is available
+            const aAvailableMto = this.getView()
+                .getModel("modelsList")
+                .getProperty("/mto") || [];
+
+            const bAvailable = aAvailableMto.some(
+                oModel =>
+                    oModel.modelCode === oHeader.mtoModelCode
+            );
+
+            if (!bAvailable) {
+
+                MessageBox.error(
+                    "The selected MTO Model is already configured or is not available."
+                );
+
+                return;
+            }
+
+            // Final temporary header
+            const oFinalHeader = {
+
+                mtoModelCode:
+                    oHeader.mtoModelCode,
+
+                referenceMTSModel_modelCode:
+                    oHeader.referenceMTSModel_modelCode,
+
+                validFrom:
+                    oHeader.validFrom,
+
+                approvalStatus: "DRAFT"
+            };
+
+            // Store header and empty parts on component
+            const oCreateModel = new JSONModel({
+
+                header: oFinalHeader,
+
+                parts: []
+
+            });
+
+            this.getOwnerComponent()
+                .setModel(
+                    oCreateModel,
+                    "mtoCreateModel"
+                );
+
+            // Clear temporary List Page row
+            this._clearCreateHeader();
+
+            // Show Busy Indicator
+            BusyIndicator.show(0);
+
+            // Navigate to Object Page Create Mode
+            this.getOwnerComponent()
+                .getRouter()
+                .navTo(CREATE_ROUTE);
         },
 
         // =========================
-        // SUBMIT (footer)
+        // CANCEL NEW CONFIGURATION
         // =========================
 
-        onSubmit: async function () {
-            const oModel = this.getView().getModel();
+        onCancelCreate: function () {
 
-            const aNew = this.byId("mtoConfigurationsTable").getBinding("items")
-                .getAllCurrentContexts()
-                .filter((oCtx) => oCtx.isTransient());
-
-            if (aNew.length === 0 && this._aEditContexts.length === 0) {
-                MessageToast.show("Nothing to submit.");
+            if (!this._isCreating()) {
                 return;
             }
 
-            // ---------- validation ----------
-            if (aNew.some((oCtx) => !oCtx.getProperty("mtoModelCode"))) {
-                MessageBox.error("Please select an MTO model for every new row.");
-                return;
-            }
-            if (aNew.concat(this._aEditContexts)
-                    .some((oCtx) => !oCtx.getProperty("referenceMTSModel_modelCode"))) {
-                MessageBox.error("Please select a reference MTS model for every row.");
-                return;
-            }
-            const aCodes = aNew.map((oCtx) => oCtx.getProperty("mtoModelCode"));
-            if (new Set(aCodes).size !== aCodes.length) {
-                MessageBox.error("The same MTO model is selected in more than one new row.");
+            if (!this._hasCreateData()) {
+
+                this._clearCreateHeader();
+
                 return;
             }
 
-            // ---------- status + cleanup ----------
-            // remember the old status so it can be restored if the save fails
-            const mOldStatus = new Map();
+            MessageBox.confirm(
+                "Discard this new MTO configuration?",
+                {
+                    title: "Cancel Configuration",
 
-            aNew.forEach((oCtx) => {
-                mOldStatus.set(oCtx, STATUS.DRAFT);
-                oCtx.setProperty("approvalStatus", STATUS.SUBMITTED);
-            });
-            this._aEditContexts.forEach((oCtx) => {
-                // existing rows only go back to approval if something actually changed
-                if (oCtx.hasPendingChanges()) {
-                    mOldStatus.set(oCtx, oCtx.getProperty("approvalStatus"));
-                    oCtx.setProperty("approvalStatus", STATUS.SUBMITTED);
-                }
-            });
+                    onClose: sAction => {
 
-            // a cleared date picker returns "", but the service expects null
-            aNew.concat(this._aEditContexts).forEach((oCtx) => {
-                if (oCtx.getProperty("validFrom") === "") {
-                    oCtx.setProperty("validFrom", null);
-                }
-            });
+                        if (sAction !== MessageBox.Action.OK) {
+                            return;
+                        }
 
-            // ---------- save ----------
-            const fnRestoreStatus = () => mOldStatus.forEach((sOld, oCtx) => {
-                oCtx.setProperty("approvalStatus", sOld);
-            });
+                        this._clearCreateHeader();
 
-            this.getView().setBusy(true);
-            try {
-                await oModel.submitBatch(GROUP);
-
-                if (oModel.hasPendingChanges(GROUP)) { // server rejected it
-                    fnRestoreStatus();
-                    MessageBox.error("Submit failed. Please check the entries and try again.");
-                    return;
-                }
-
-                this._exitEditMode();
-                MessageToast.show("Submitted for approval.");
-                this._loadModels(); // used MTO codes must disappear from the dropdown
-            } catch (oError) {
-                console.error(oError);
-                fnRestoreStatus();
-                MessageBox.error((oError && oError.message) || "Failed to submit.");
-            } finally {
-                this.getView().setBusy(false);
-            }
-        },
-
-        // =========================
-        // DELETE
-        // =========================
-
-        onDelete: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
-
-            // new, unsaved row: just discard it
-            if (oContext.isTransient()) {
-                oContext.delete("$auto");
-                return;
-            }
-
-            if (oContext.getProperty("approvalStatus") === STATUS.SUBMITTED) {
-                MessageToast.show("This configuration is waiting for approval and cannot be deleted.");
-                return;
-            }
-
-            MessageBox.confirm("Are you sure you want to delete this MTO Configuration?", {
-                title: "Confirm Delete",
-                onClose: async (sAction) => {
-                    if (sAction !== MessageBox.Action.OK) { return; }
-                    try {
-                        await oContext.delete("$auto"); // immediate, not part of the Submit batch
-                        this._aEditContexts = this._aEditContexts.filter((o) => o !== oContext);
-                        MessageToast.show("MTO Configuration deleted successfully.");
-                        this._loadModels();
-                    } catch (oError) {
-                        console.error(oError);
-                        MessageBox.error(oError.message || "Delete failed.");
+                        MessageToast.show(
+                            "New configuration discarded."
+                        );
                     }
                 }
-            });
+            );
+        },
+
+        // =========================
+        // EXISTING CONFIGURATION NAVIGATION
+        // =========================
+
+        onConfigurationPress: function (oEvent) {
+
+            if (this._isCreating()) {
+
+                MessageToast.show(
+                    "Please complete or cancel the new configuration first."
+                );
+
+                return;
+            }
+
+            const oContext = oEvent.getSource()
+                .getBindingContext();
+
+            if (!oContext) {
+                return;
+            }
+
+            const sMtoModelCode = oContext.getProperty(
+                "mtoModelCode"
+            );
+
+            if (!sMtoModelCode) {
+
+                MessageBox.error(
+                    "MTO Model Code not found."
+                );
+
+                return;
+            }
+            // Show Busy Indicator immediately
+            BusyIndicator.show(0);
+            this.getOwnerComponent()
+                .getRouter()
+                .navTo(
+                    OBJECT_ROUTE,
+                    {
+                        mtoModelCode:
+                            encodeURIComponent(sMtoModelCode)
+                    }
+                );
+        },
+
+        // =========================
+        // FILTER
+        // =========================
+
+        onFilter: function () {
+
+            if (this._isCreating()) {
+
+                MessageToast.show(
+                    "Please complete or cancel the new configuration first."
+                );
+
+                return;
+            }
+
+            const aFilters = [];
+
+            const sMTOModelCode = this.byId(
+                "mtoModelCodeFilter"
+            ).getSelectedKey();
+
+            const sReferenceMTS = this.byId(
+                "mtoReferenceMTSFilter"
+            ).getSelectedKey();
+
+            const sValidFrom = this.byId(
+                "mtoValidFromFilter"
+            ).getValue();
+
+            if (sMTOModelCode) {
+
+                aFilters.push(
+                    new Filter(
+                        "mtoModelCode",
+                        FilterOperator.EQ,
+                        sMTOModelCode
+                    )
+                );
+            }
+
+            if (sReferenceMTS) {
+
+                aFilters.push(
+                    new Filter(
+                        "referenceMTSModel_modelCode",
+                        FilterOperator.EQ,
+                        sReferenceMTS
+                    )
+                );
+            }
+
+            if (sValidFrom) {
+
+                aFilters.push(
+                    new Filter(
+                        "validFrom",
+                        FilterOperator.EQ,
+                        sValidFrom
+                    )
+                );
+            }
+
+            this.byId("mtoConfigurationsTable")
+                .getBinding("items")
+                .filter(
+                    aFilters,
+                    FilterType.Application
+                );
+        },
+
+        // =========================
+        // CLEAR FILTERS
+        // =========================
+
+        onClearFilters: function () {
+
+            if (this._isCreating()) {
+
+                MessageToast.show(
+                    "Please complete or cancel the new configuration first."
+                );
+
+                return;
+            }
+
+            this.byId("mtoModelCodeFilter")
+                .setSelectedKey("");
+
+            this.byId("mtoReferenceMTSFilter")
+                .setSelectedKey("");
+
+            this.byId("mtoValidFromFilter")
+                .setValue("");
+
+            this.byId("mtoConfigurationsTable")
+                .getBinding("items")
+                .filter([], FilterType.Application);
+        },
+
+        // =========================
+        // REFRESH
+        // =========================
+
+        onRefresh: function () {
+
+            if (this._isCreating()) {
+
+                MessageToast.show(
+                    "Please complete or cancel the new configuration first."
+                );
+
+                return;
+            }
+
+            const oBinding = this.byId(
+                "mtoConfigurationsTable"
+            ).getBinding("items");
+
+            if (oBinding) {
+                oBinding.refresh();
+            }
+
+            this._loadModels();
+
+            MessageToast.show(
+                "MTO configurations refreshed."
+            );
+        },
+
+        // =========================
+        // TABLE COUNT
+        // =========================
+
+        onTableUpdateFinished: function (oEvent) {
+
+            const iTotal =
+                oEvent.getParameter("total") || 0;
+
+            this.getView()
+                .getModel("viewModel")
+                .setProperty(
+                    "/count",
+                    iTotal
+                );
         }
+
     });
 });
