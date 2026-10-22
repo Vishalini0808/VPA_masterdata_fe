@@ -152,6 +152,11 @@
           "name": "MTOConfigurationObject",
           "pattern": "MTOConfiguration/{mtoModelCode}",
           "target": "MTOConfigurationObject"
+        },
+        {
+          "name": "MTOConfigurationCreate",
+          "pattern": "MTOConfigurations/create",
+          "target": "MTOConfigurationObject"
         }
       ],
       "targets": {

@@ -1,3 +1,4 @@
+
 <mvc:View
     controllerName="vpamasterdata.controller.MTOConfigurationObject"
     xmlns:mvc="sap.ui.core.mvc"
@@ -36,40 +37,51 @@
                             <VBox>
                                 <Title
                                     class="vpaObjectTitle"
-                                    text="{mtoModelCode}"
+                                    text="{= ${viewModel>/isCreateMode}
+                                        ? ${mtoCreateModel>/header/mtoModelCode}
+                                        : ${mtoModelCode} }"
                                     wrapping="true"/>
-                                <Text class="vpaSubtitle" text="MTO Configuration"/>
+
+                                <Text
+                                    class="vpaSubtitle"
+                                    text="MTO Configuration"/>
                             </VBox>
                         </f:expandedHeading>
 
                         <f:snappedHeading>
-                            <Title class="vpaObjectTitle" text="{mtoModelCode}"/>
+                            <Title
+                                class="vpaObjectTitle"
+                                text="{= ${viewModel>/isCreateMode}
+                                    ? ${mtoCreateModel>/header/mtoModelCode}
+                                    : ${mtoModelCode} }"/>
                         </f:snappedHeading>
 
                         <f:actions>
+
+                            <!-- EXISTING CONFIGURATION: EDIT -->
                             <Button
                                 text="Edit"
                                 icon="sap-icon://edit"
                                 type="Emphasized"
                                 press=".onEdit"
-                                visible="{= !${viewModel>/editHeader} }"/>
-                            <Button
-                                text="Delete"
-                                icon="sap-icon://delete"
-                                type="Transparent"
-                                press=".onDelete"
-                                visible="{= !${viewModel>/editHeader} }"/>
+                                visible="{= !${viewModel>/isCreateMode} &amp;&amp; !${viewModel>/editHeader} }"
+                                enabled="{viewModel>/canEdit}"/>
+
+                            <!-- EXISTING CONFIGURATION: SAVE HEADER -->
                             <Button
                                 text="Save"
                                 icon="sap-icon://accept"
                                 type="Emphasized"
                                 press=".onSaveHeader"
-                                visible="{viewModel>/editHeader}"/>
+                                visible="{= !${viewModel>/isCreateMode} &amp;&amp; ${viewModel>/editHeader} }"/>
+
+                            <!-- EXISTING CONFIGURATION: CANCEL HEADER -->
                             <Button
                                 text="Cancel"
                                 type="Transparent"
                                 press=".onCancelHeader"
-                                visible="{viewModel>/editHeader}"/>
+                                visible="{= !${viewModel>/isCreateMode} &amp;&amp; ${viewModel>/editHeader} }"/>
+
                         </f:actions>
 
                     </f:ObjectPageDynamicHeaderTitle>
@@ -78,106 +90,225 @@
                 <!-- ============ SECTIONS ============ -->
                 <f:sections>
 
-                    <!-- ===== CONFIGURATION DETAILS ===== -->
+                    <!-- ============ CONFIGURATION DETAILS ============ -->
                     <f:ObjectPageSection title="Configuration Details">
+
                         <f:subSections>
                             <f:ObjectPageSubSection>
                                 <f:blocks>
 
                                     <VBox class="vpaCard vpaDetailsCard">
+
                                         <HBox wrap="Wrap">
 
-                                            <VBox width="16rem" class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
-                                                <Text class="vpaFieldLabel" text="MTO Model Code"/>
-                                                <Text class="vpaFieldValue" text="{mtoModelCode}"/>
+                                            <!-- MTO MODEL -->
+                                            <VBox
+                                                width="16rem"
+                                                class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
+
+                                                <Text
+                                                    class="vpaFieldLabel"
+                                                    text="MTO Model Code"/>
+
+                                                <!-- Existing mode -->
+                                                <Text
+                                                    class="vpaFieldValue"
+                                                    text="{mtoModelCode}"
+                                                    visible="{= !${viewModel>/isCreateMode} }"/>
+
+                                                <!-- Create mode -->
+                                                <Text
+                                                    class="vpaFieldValue"
+                                                    text="{mtoCreateModel>/header/mtoModelCode}"
+                                                    visible="{viewModel>/isCreateMode}"/>
+
                                             </VBox>
 
-                                            <VBox width="18rem" class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
-                                                <Text class="vpaFieldLabel" text="Reference MTS Model"/>
+                                            <!-- REFERENCE MTS MODEL -->
+                                            <VBox
+                                                width="18rem"
+                                                class="sapUiMediumMarginEnd sapUiSmallMarginBottom">
+
+                                                <Text
+                                                    class="vpaFieldLabel"
+                                                    text="Reference MTS Model"/>
+
+                                                <!-- Create mode -->
+                                                <Text
+                                                    class="vpaFieldValue"
+                                                    text="{mtoCreateModel>/header/referenceMTSModel_modelCode}"
+                                                    visible="{viewModel>/isCreateMode}"/>
+
+                                                <!-- Existing display mode -->
                                                 <Text
                                                     class="vpaFieldValue"
                                                     text="{referenceMTSModel_modelCode}"
-                                                    visible="{= !${viewModel>/editHeader} }"/>
+                                                    visible="{= !${viewModel>/isCreateMode} &amp;&amp; !${viewModel>/editHeader} }"/>
+
+                                                <!-- Existing edit mode -->
                                                 <ComboBox
                                                     width="100%"
                                                     placeholder="Select reference MTS model"
-                                                    visible="{viewModel>/editHeader}"
+                                                    visible="{= !${viewModel>/isCreateMode} &amp;&amp; ${viewModel>/editHeader} }"
                                                     selectedKey="{referenceMTSModel_modelCode}"
                                                     showSecondaryValues="true"
                                                     filterSecondaryValues="true"
-                                                    items="{ path: 'modelsList>/mts', templateShareable: true }">
+                                                    items="{
+                                                        path: 'modelsList>/mts',
+                                                        templateShareable: true
+                                                    }">
+
                                                     <core:ListItem
                                                         key="{modelsList>modelCode}"
                                                         text="{modelsList>modelCode}"
                                                         additionalText="{modelsList>modelDescription}"/>
+
                                                 </ComboBox>
+
                                             </VBox>
 
-                                            <VBox width="14rem" class="sapUiSmallMarginBottom">
-                                                <Text class="vpaFieldLabel" text="Valid From"/>
+                                            <!-- VALID FROM -->
+                                            <VBox
+                                                width="14rem"
+                                                class="sapUiSmallMarginBottom">
+
+                                                <Text
+                                                    class="vpaFieldLabel"
+                                                    text="Valid From"/>
+
+                                                <!-- Create mode -->
+                                                <Text
+                                                    class="vpaFieldValue"
+                                                    text="{mtoCreateModel>/header/validFrom}"
+                                                    visible="{viewModel>/isCreateMode}"/>
+
+                                                <!-- Existing display mode -->
                                                 <Text
                                                     class="vpaFieldValue"
                                                     text="{validFrom}"
-                                                    visible="{= !${viewModel>/editHeader} }"/>
+                                                    visible="{= !${viewModel>/isCreateMode} &amp;&amp; !${viewModel>/editHeader} }"/>
+
+                                                <!-- Existing edit mode -->
                                                 <DatePicker
                                                     width="100%"
                                                     valueFormat="yyyy-MM-dd"
                                                     displayFormat="dd-MMM-yyyy"
                                                     value="{validFrom}"
-                                                    visible="{viewModel>/editHeader}"/>
+                                                    visible="{= !${viewModel>/isCreateMode} &amp;&amp; ${viewModel>/editHeader} }"/>
+
                                             </VBox>
 
                                         </HBox>
+
                                     </VBox>
 
                                 </f:blocks>
                             </f:ObjectPageSubSection>
                         </f:subSections>
+
                     </f:ObjectPageSection>
 
-                    <!-- ===== PARTS ===== -->
+                    <!-- ============ PARTS ============ -->
                     <f:ObjectPageSection title="Parts">
+
                         <f:subSections>
                             <f:ObjectPageSubSection>
                                 <f:blocks>
 
                                     <VBox class="vpaCard vpaTableCard">
 
+                                        <!-- ===================================== -->
+                                        <!-- EXISTING CONFIGURATION PARTS TABLE    -->
+                                        <!-- ===================================== -->
+
                                         <Table
                                             id="mtoPartsTable"
                                             class="vpaTable"
+                                            visible="{= !${viewModel>/isCreateMode} }"
                                             updateFinished=".onTableUpdateFinished"
                                             items="{
                                                 path: 'parts',
-                                                parameters: { $$ownRequest: true, $$updateGroupId: 'partsGroup' },
-                                                sorter: { path: 'part_partCode' }
+                                                parameters: {
+                                                    $$ownRequest: true,
+                                                    $$updateGroupId: 'partsGroup'
+                                                },
+                                                sorter: {
+                                                    path: 'part_partCode'
+                                                }
                                             }"
                                             growing="true"
                                             growingThreshold="100">
 
                                             <headerToolbar>
                                                 <OverflowToolbar>
-                                                    <Title text="MTO Parts" level="H3"/>
+
+                                                    <Title
+                                                        text="MTO Parts"
+                                                        level="H3"/>
+
                                                     <ToolbarSpacer/>
+
                                                     <ObjectNumber
                                                         number="{viewModel>/grandTotal}"
                                                         unit="Grand Total"
                                                         emphasized="true"/>
-                                                    <Button text="Add Part" icon="sap-icon://add" type="Emphasized" press=".onAddPart"/>
-                                                    <Button text="Save" icon="sap-icon://accept" press=".onSaveParts"/>
-                                                    <Button text="Cancel" type="Transparent" press=".onCancelParts"/>
+
+                                                    <!-- Enabled after Edit -->
+                                                    <Button
+                                                        text="Add Part"
+                                                        icon="sap-icon://add"
+                                                        type="Emphasized"
+                                                        enabled="{viewModel>/editHeader}"
+                                                        press=".onAddPart"/>
+
+                                                    <Button
+                                                        text="Save"
+                                                        icon="sap-icon://accept"
+                                                        enabled="{viewModel>/editHeader}"
+                                                        press=".onSaveParts"/>
+
+                                                    <Button
+                                                        text="Cancel"
+                                                        type="Transparent"
+                                                        enabled="{viewModel>/editHeader}"
+                                                        press=".onCancelParts"/>
+
                                                 </OverflowToolbar>
                                             </headerToolbar>
 
                                             <columns>
-                                                <Column width="14rem"><Text text="Part"/></Column>
-                                                <Column><Text text="Description"/></Column>
-                                                <Column width="8rem" hAlign="End"><Text text="MIY Cost"/></Column>
-                                                <Column width="8rem" hAlign="End"><Text text="MIY Markup"/></Column>
-                                                <Column width="9rem"><Text text="Price Indicator"/></Column>
-                                                <Column width="8rem" hAlign="End"><Text text="Unit Price"/></Column>
-                                                <Column width="7rem"><Text text="Quantity"/></Column>
-                                                <Column width="9rem" hAlign="End"><Text text="Line Total"/></Column>
+                                                <Column width="10rem">
+                                                    <Text text="Part"/>
+                                                </Column>
+
+                                                <Column width="10rem">
+                                                    <Text text="Description"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="MIY Cost"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="MIY Markup"/>
+                                                </Column>
+
+                                                <Column width="8rem">
+                                                    <Text text="Price Indicator"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="Unit Price"/>
+                                                </Column>
+
+                                                <Column width="7rem">
+                                                    <Text text="Quantity"/>
+                                                </Column>
+
+                                                <Column width="7rem" hAlign="End">
+                                                    <Text text="Line Total"/>
+                                                </Column>
+
                                                 <Column width="4rem"/>
                                             </columns>
 
@@ -185,37 +316,287 @@
                                                 <ColumnListItem>
                                                     <cells>
 
+                                                        <!-- PART SELECTION -->
                                                         <ComboBox
                                                             width="100%"
                                                             placeholder="Select part"
+                                                            enabled="{viewModel>/editHeader}"
                                                             selectedKey="{part_partCode}"
                                                             selectionChange=".onPartChange"
                                                             showSecondaryValues="true"
                                                             filterSecondaryValues="true"
-                                                            items="{ path: 'partsList>/items', templateShareable: true }">
+                                                            items="{
+                                                                path: 'partsList>/items',
+                                                                templateShareable: true
+                                                            }">
+
                                                             <core:ListItem
                                                                 key="{partsList>partCode}"
                                                                 text="{partsList>partCode}"
                                                                 additionalText="{partsList>description}"/>
+
                                                         </ComboBox>
 
-                                                        <Text text="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtDescription'}"/>
-                                                        <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtMiyCost'}"/>
-                                                        <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtMiyMarkup'}"/>
-                                                        <Text text="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtPriceIndicator'}"/>
-                                                        <ObjectNumber number="{parts:[{path:'part_partCode'},{path:'partsLookup>/'}], formatter:'.fmtUnitPrice'}"/>
+                                                        <!-- DESCRIPTION -->
+                                                        <Text
+                                                            text="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtDescription'
+                                                            }"/>
 
+                                                        <!-- MIY COST -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtMiyCost'
+                                                            }"/>
+
+                                                        <!-- MIY MARKUP -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtMiyMarkup'
+                                                            }"/>
+
+                                                        <!-- PRICE INDICATOR -->
+                                                        <Text
+                                                            text="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtPriceIndicator'
+                                                            }"/>
+
+                                                        <!-- UNIT PRICE -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtUnitPrice'
+                                                            }"/>
+
+                                                        <!-- QUANTITY -->
                                                         <Input
                                                             value="{quantity}"
                                                             type="Number"
                                                             width="6rem"
-                                                            enabled="{= !!${part_partCode} }"
+                                                            enabled="{viewModel>/editHeader}"
                                                             change=".onQuantityChange"/>
 
+                                                        <!-- LINE TOTAL -->
                                                         <ObjectNumber
                                                             emphasized="true"
-                                                            number="{parts:[{path:'part_partCode'},{path:'quantity'},{path:'partsLookup>/'}], formatter:'.fmtLineTotal'}"/>
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'part_partCode'},
+                                                                    {path: 'quantity'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtLineTotal'
+                                                            }"/>
 
+                                                        <!-- DELETE PART -->
+                                                        <Button
+                                                            icon="sap-icon://delete"
+                                                            type="Transparent"
+                                                            tooltip="Delete"
+                                                            enabled="{viewModel>/editHeader}"
+                                                            press=".onDeletePart"/>
+
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+
+                                        </Table>
+
+                                        <!-- ===================================== -->
+                                        <!-- CREATE MODE PARTS TABLE              -->
+                                        <!-- ===================================== -->
+
+                                        <Table
+                                            id="mtoCreatePartsTable"
+                                            class="vpaTable"
+                                            visible="{viewModel>/isCreateMode}"
+                                            items="{mtoCreateModel>/parts}">
+
+                                            <headerToolbar>
+                                                <OverflowToolbar>
+
+                                                    <Title
+                                                        text="MTO Parts"
+                                                        level="H3"/>
+
+                                                    <ToolbarSpacer/>
+
+                                                    <ObjectNumber
+                                                        number="{viewModel>/grandTotal}"
+                                                        unit="Grand Total"
+                                                        emphasized="true"/>
+
+                                                    <!-- Always available in Create Mode -->
+                                                    <Button
+                                                        text="Add Part"
+                                                        icon="sap-icon://add"
+                                                        type="Emphasized"
+                                                        press=".onAddPart"/>
+
+                                                    <Button
+                                                        text="Submit"
+                                                        icon="sap-icon://paper-plane"
+                                                        type="Emphasized"
+                                                        press=".onSubmitCreate"/>
+
+                                                    <Button
+                                                        text="Cancel"
+                                                        type="Transparent"
+                                                        press=".onCancelCreate"/>
+
+                                                </OverflowToolbar>
+                                            </headerToolbar>
+
+                                            <columns>
+                                                <Column width="10rem">
+                                                    <Text text="Part"/>
+                                                </Column>
+
+                                                <Column width="10rem">
+                                                    <Text text="Description"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="MIY Cost"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="MIY Markup"/>
+                                                </Column>
+
+                                                <Column width="8rem">
+                                                    <Text text="Price Indicator"/>
+                                                </Column>
+
+                                                <Column width="8rem" hAlign="End">
+                                                    <Text text="Unit Price"/>
+                                                </Column>
+
+                                                <Column width="7rem">
+                                                    <Text text="Quantity"/>
+                                                </Column>
+
+                                                <Column width="7rem" hAlign="End">
+                                                    <Text text="Line Total"/>
+                                                </Column>
+
+                                                <Column width="4rem"/>
+                                            </columns>
+
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+
+                                                        <!-- PART SELECTION -->
+                                                        <ComboBox
+                                                            width="100%"
+                                                            placeholder="Select part"
+                                                            selectedKey="{mtoCreateModel>part_partCode}"
+                                                            selectionChange=".onPartChange"
+                                                            showSecondaryValues="true"
+                                                            filterSecondaryValues="true"
+                                                            items="{
+                                                                path: 'partsList>/items',
+                                                                templateShareable: true
+                                                            }">
+
+                                                            <core:ListItem
+                                                                key="{partsList>partCode}"
+                                                                text="{partsList>partCode}"
+                                                                additionalText="{partsList>description}"/>
+
+                                                        </ComboBox>
+
+                                                        <!-- DESCRIPTION -->
+                                                        <Text
+                                                            text="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtDescription'
+                                                            }"/>
+
+                                                        <!-- MIY COST -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtMiyCost'
+                                                            }"/>
+
+                                                        <!-- MIY MARKUP -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtMiyMarkup'
+                                                            }"/>
+
+                                                        <!-- PRICE INDICATOR -->
+                                                        <Text
+                                                            text="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtPriceIndicator'
+                                                            }"/>
+
+                                                        <!-- UNIT PRICE -->
+                                                        <ObjectNumber
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtUnitPrice'
+                                                            }"/>
+
+                                                        <!-- QUANTITY -->
+                                                        <Input
+                                                            value="{mtoCreateModel>quantity}"
+                                                            type="Number"
+                                                            width="6rem"
+                                                            enabled="{= !!${mtoCreateModel>part_partCode} }"
+                                                            change=".onQuantityChange"/>
+
+                                                        <!-- LINE TOTAL -->
+                                                        <ObjectNumber
+                                                            emphasized="true"
+                                                            number="{
+                                                                parts: [
+                                                                    {path: 'mtoCreateModel>part_partCode'},
+                                                                    {path: 'mtoCreateModel>quantity'},
+                                                                    {path: 'partsLookup>/'}
+                                                                ],
+                                                                formatter: '.fmtLineTotal'
+                                                            }"/>
+
+                                                        <!-- DELETE PART -->
                                                         <Button
                                                             icon="sap-icon://delete"
                                                             type="Transparent"
@@ -225,6 +606,7 @@
                                                     </cells>
                                                 </ColumnListItem>
                                             </items>
+
                                         </Table>
 
                                     </VBox>
@@ -232,10 +614,13 @@
                                 </f:blocks>
                             </f:ObjectPageSubSection>
                         </f:subSections>
+
                     </f:ObjectPageSection>
 
                 </f:sections>
+
             </f:ObjectPageLayout>
         </content>
+
     </Page>
 </mvc:View>

@@ -1,3 +1,4 @@
+
 <mvc:View
     controllerName="vpamasterdata.controller.MTOConfigurations"
     xmlns:mvc="sap.ui.core.mvc"
@@ -18,7 +19,10 @@
                         type="Transparent"
                         tooltip="Back"
                         press=".onNavBack"/>
-                    <Title text="MTO Configuration" level="H1"/>
+
+                    <Title
+                        text="MTO Configuration"
+                        level="H1"/>
                 </contentLeft>
             </Bar>
         </customHeader>
@@ -26,6 +30,7 @@
         <content>
 
             <!-- ================= FILTERS ================= -->
+
             <Panel
                 class="vpaCard sapUiSmallMargin"
                 headerText="Filters"
@@ -38,40 +43,62 @@
                     wrap="Wrap"
                     class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom">
 
+                    <!-- MTO MODEL FILTER -->
                     <VBox class="sapUiMediumMarginEnd">
-                        <Label text="MTO Model Code" design="Bold"/>
+
+                        <Label
+                            text="MTO Model Code"
+                            design="Bold"/>
+
                         <ComboBox
                             id="mtoModelCodeFilter"
                             width="16rem"
                             placeholder="Select MTO Model Code"
                             items="{modelsList>/configured}">
+
                             <core:Item
                                 key="{modelsList>modelCode}"
                                 text="{modelsList>modelCode}"/>
+
                         </ComboBox>
+
                     </VBox>
 
+                    <!-- REFERENCE MTS FILTER -->
                     <VBox class="sapUiMediumMarginEnd">
-                        <Label text="Reference MTS Model" design="Bold"/>
+
+                        <Label
+                            text="Reference MTS Model"
+                            design="Bold"/>
+
                         <ComboBox
                             id="mtoReferenceMTSFilter"
                             width="16rem"
                             placeholder="Select Reference MTS Model"
                             items="{modelsList>/mts}">
+
                             <core:Item
                                 key="{modelsList>modelCode}"
                                 text="{modelsList>modelCode}"/>
+
                         </ComboBox>
+
                     </VBox>
 
+                    <!-- VALID FROM FILTER -->
                     <VBox class="sapUiMediumMarginEnd">
-                        <Label text="Valid From" design="Bold"/>
+
+                        <Label
+                            text="Valid From"
+                            design="Bold"/>
+
                         <DatePicker
                             id="mtoValidFromFilter"
                             width="14rem"
                             placeholder="Select Valid From"
                             valueFormat="yyyy-MM-dd"
                             displayFormat="dd-MMM-yyyy"/>
+
                     </VBox>
 
                     <Button
@@ -79,160 +106,237 @@
                         icon="sap-icon://search"
                         type="Emphasized"
                         press=".onFilter"/>
+
                     <Button
                         text="Clear"
                         icon="sap-icon://clear-filter"
                         class="sapUiTinyMarginBegin"
                         press=".onClearFilters"/>
+
                 </HBox>
+
             </Panel>
 
-            <!-- ================= TABLE ================= -->
+            <!-- ================= MTO CONFIGURATIONS ================= -->
+
             <VBox class="vpaCard vpaTableCard sapUiSmallMargin">
+
+                <!-- COMMON TOOLBAR -->
+
+                <OverflowToolbar>
+
+                    <Title
+                        text="{= 'MTO Configurations (' + ${viewModel>/count} + ')' }"
+                        level="H2"/>
+
+                    <ToolbarSpacer/>
+
+                    <Button
+                        text="Add"
+                        icon="sap-icon://add"
+                        type="Emphasized"
+                        enabled="{= !${viewModel>/isCreating} }"
+                        press=".onAdd"/>
+
+                    <Button
+                        text="Refresh"
+                        icon="sap-icon://refresh"
+                        type="Transparent"
+                        enabled="{= !${viewModel>/isCreating} }"
+                        press=".onRefresh"/>
+
+                    <!-- CANCEL TEMPORARY ROW -->
+                    <Button
+                        text="Cancel"
+                        icon="sap-icon://decline"
+                        type="Transparent"
+                        visible="{viewModel>/isCreating}"
+                        press=".onCancelCreate"/>
+
+                </OverflowToolbar>
+
+                <!-- ========================================== -->
+                <!-- TEMPORARY EDITABLE ROW                      -->
+                <!-- Displayed above existing records           -->
+                <!-- ========================================== -->
+
+                <Table
+                    id="mtoCreateHeaderTable"
+                    class="vpaTable"
+                    visible="{viewModel>/isCreating}"
+                    showSeparators="None"
+                    items="{createHeader>/rows}">
+
+                    <columns>
+
+                        <Column>
+                            <Text text="MTO Model Code"/>
+                        </Column>
+
+                        <Column>
+                            <Text text="Valid From"/>
+                        </Column>
+
+                        <Column>
+                            <Text text="Reference MTS Model"/>
+                        </Column>
+
+                        <Column width="10rem">
+                            <Text text="Approval Status"/>
+                        </Column>
+
+                    </columns>
+
+                    <items>
+
+                        <ColumnListItem
+                            type="Navigation"
+                            press=".onCreateConfigurationPress">
+
+                            <cells>
+
+                                <!-- MTO MODEL -->
+                                <ComboBox
+                                    width="100%"
+                                    placeholder="Select MTO model"
+                                    selectedKey="{createHeader>mtoModelCode}"
+                                    showSecondaryValues="true"
+                                    filterSecondaryValues="true"
+                                    items="{
+                                        path: 'modelsList>/mto',
+                                        templateShareable: true
+                                    }">
+
+                                    <core:ListItem
+                                        key="{modelsList>modelCode}"
+                                        text="{modelsList>modelCode}"
+                                        additionalText="{modelsList>modelDescription}"/>
+
+                                </ComboBox>
+
+                                <!-- VALID FROM -->
+                                <DatePicker
+                                    width="100%"
+                                    valueFormat="yyyy-MM-dd"
+                                    displayFormat="dd-MMM-yyyy"
+                                    value="{createHeader>validFrom}"/>
+
+                                <!-- REFERENCE MTS -->
+                                <ComboBox
+                                    width="100%"
+                                    placeholder="Select reference MTS model"
+                                    selectedKey="{createHeader>referenceMTSModel_modelCode}"
+                                    showSecondaryValues="true"
+                                    filterSecondaryValues="true"
+                                    items="{
+                                        path: 'modelsList>/mts',
+                                        templateShareable: true
+                                    }">
+
+                                    <core:ListItem
+                                        key="{modelsList>modelCode}"
+                                        text="{modelsList>modelCode}"
+                                        additionalText="{modelsList>modelDescription}"/>
+
+                                </ComboBox>
+
+                                <!-- APPROVAL STATUS -->
+                                <ObjectStatus
+                                    text="{createHeader>approvalStatus}"
+                                    state="None"/>
+
+                            </cells>
+
+                        </ColumnListItem>
+
+                    </items>
+
+                </Table>
+
+                <!-- CREATE ROW INSTRUCTION -->
+                <MessageStrip
+                    text="Complete the configuration details and click the row navigation arrow to add parts."
+                    type="Information"
+                    showIcon="true"
+                    visible="{viewModel>/isCreating}"
+                    class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom"/>
+
+
+                <!-- ========================================== -->
+                <!-- EXISTING CONFIGURATIONS TABLE              -->
+                <!-- ========================================== -->
 
                 <Table
                     id="mtoConfigurationsTable"
                     class="vpaTable"
                     items="{
                         path: '/MTOConfigurations',
-                        parameters: { $$updateGroupId: 'mtoGroup', $count: true },
-                        sorter: { path: 'mtoModelCode' }
+                        parameters: {
+                            $count: true
+                        },
+                        sorter: {
+                            path: 'mtoModelCode'
+                        }
                     }"
                     growing="true"
                     growingThreshold="20"
                     sticky="ColumnHeaders"
                     updateFinished=".onTableUpdateFinished">
 
-                    <headerToolbar>
-                        <OverflowToolbar>
-                            <Title
-                                text="{= 'MTO Configurations (' + ${viewModel>/count} + ')' }"
-                                level="H2"/>
-                            <ToolbarSpacer/>
-                            <Button
-                                text="Add"
-                                icon="sap-icon://add"
-                                type="Emphasized"
-                                press=".onAdd"/>
-                            <Button
-                                text="Refresh"
-                                icon="sap-icon://refresh"
-                                type="Transparent"
-                                press=".onRefresh"/>
-                        </OverflowToolbar>
-                    </headerToolbar>
-
                     <columns>
-                        <Column><Text text="MTO Model Code"/></Column>
-                        <Column><Text text="Valid From"/></Column>
-                        <Column><Text text="Reference MTS Model"/></Column>
-                        <Column width="10rem"><Text text="Approval Status"/></Column>
-                        <Column width="6rem"><Text text="Actions"/></Column>
+
+                        <Column>
+                            <Text text="MTO Model Code"/>
+                        </Column>
+
+                        <Column>
+                            <Text text="Valid From"/>
+                        </Column>
+
+                        <Column>
+                            <Text text="Reference MTS Model"/>
+                        </Column>
+
+                        <Column width="10rem">
+                            <Text text="Approval Status"/>
+                        </Column>
+
                     </columns>
 
                     <items>
-                        <ColumnListItem type="Navigation" press=".onConfigurationPress">
+
+                        <ColumnListItem
+                            type="Navigation"
+                            press=".onConfigurationPress">
+
                             <cells>
 
-                                <!-- [0] MTO model code: dropdown only on a new row -->
-                                <VBox>
-                                    <Text
-                                        text="{mtoModelCode}"
-                                        visible="{= !%{@$ui5.context.isTransient} }"/>
-                                    <ComboBox
-                                        width="100%"
-                                        placeholder="Select MTO model"
-                                        visible="{= !!%{@$ui5.context.isTransient} }"
-                                        selectedKey="{mtoModelCode}"
-                                        showSecondaryValues="true"
-                                        filterSecondaryValues="true"
-                                        items="{ path: 'modelsList>/mto', templateShareable: true }">
-                                        <core:ListItem
-                                            key="{modelsList>modelCode}"
-                                            text="{modelsList>modelCode}"
-                                            additionalText="{modelsList>modelDescription}"/>
-                                    </ComboBox>
-                                </VBox>
+                                <!-- MTO MODEL -->
+                                <Text text="{mtoModelCode}"/>
 
-                                <!-- [1] Valid From: items = [Text, DatePicker] -->
-                                <VBox>
-                                    <Text
-                                        text="{validFrom}"
-                                        visible="{= !%{@$ui5.context.isTransient} }"/>
-                                    <DatePicker
-                                        width="100%"
-                                        valueFormat="yyyy-MM-dd"
-                                        displayFormat="dd-MMM-yyyy"
-                                        value="{validFrom}"
-                                        visible="{= !!%{@$ui5.context.isTransient} }"/>
-                                </VBox>
+                                <!-- VALID FROM -->
+                                <Text text="{validFrom}"/>
 
-                                <!-- [2] Reference MTS: items = [Text, ComboBox] -->
-                                <VBox>
-                                    <Text
-                                        text="{referenceMTSModel_modelCode}"
-                                        visible="{= !%{@$ui5.context.isTransient} }"/>
-                                    <ComboBox
-                                        width="100%"
-                                        placeholder="Select reference MTS model"
-                                        visible="{= !!%{@$ui5.context.isTransient} }"
-                                        selectedKey="{referenceMTSModel_modelCode}"
-                                        showSecondaryValues="true"
-                                        filterSecondaryValues="true"
-                                        items="{ path: 'modelsList>/mts', templateShareable: true }">
-                                        <core:ListItem
-                                            key="{modelsList>modelCode}"
-                                            text="{modelsList>modelCode}"
-                                            additionalText="{modelsList>modelDescription}"/>
-                                    </ComboBox>
-                                </VBox>
+                                <!-- REFERENCE MTS -->
+                                <Text text="{referenceMTSModel_modelCode}"/>
 
-                                <!-- [3] Approval status (read-only) -->
+                                <!-- APPROVAL STATUS -->
                                 <ObjectStatus
                                     text="{approvalStatus}"
-                                    state="{= ${path: 'approvalStatus', targetType: 'any'} === 'APPROVED' ? 'Success'
-                                            : ${path: 'approvalStatus', targetType: 'any'} === 'SUBMITTED' ? 'Warning'
-                                            : 'None' }"/>
-
-                                <!-- [4] Actions: items = [Edit, Delete] -->
-                                <HBox>
-                                    <Button
-                                        icon="sap-icon://edit"
-                                        type="Transparent"
-                                        tooltip="Edit"
-                                        press=".onEditRow"
-                                        enabled="{= ${path: 'approvalStatus', targetType: 'any'} !== 'SUBMITTED' }"
-                                        visible="{= !%{@$ui5.context.isTransient} }"/>
-                                    <Button
-                                        icon="sap-icon://delete"
-                                        type="Transparent"
-                                        tooltip="Delete"
-                                        press=".onDelete"
-                                        enabled="{= ${path: 'approvalStatus', targetType: 'any'} !== 'SUBMITTED' }"/>
-                                </HBox>
+                                    state="{= ${approvalStatus} === 'APPROVED' ? 'Success' : ${approvalStatus} === 'SUBMITTED' ? 'Warning' : ${approvalStatus} === 'REJECTED' ? 'Error' : 'None'}"/>
 
                             </cells>
+
                         </ColumnListItem>
+
                     </items>
+
                 </Table>
 
             </VBox>
+
         </content>
 
-        <!-- ================= FOOTER ================= -->
-        <footer>
-            <OverflowToolbar>
-                <ToolbarSpacer/>
-                <Button
-                    text="Submit"
-                    type="Emphasized"
-                    icon="sap-icon://paper-plane"
-                    press=".onSubmit"/>
-                <Button
-                    text="Cancel"
-                    press=".onCancel"/>
-            </OverflowToolbar>
-        </footer>
-
     </Page>
+
 </mvc:View>

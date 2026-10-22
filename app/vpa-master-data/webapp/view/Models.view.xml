@@ -305,11 +305,11 @@
                                             tooltip="Edit"
                                             press=".onEdit"
                                             visible="{= !%{@$ui5.context.isTransient} }"/>
-                                        <Button
+                                        <!-- <Button
                                             icon="sap-icon://delete"
                                             type="Transparent"
                                             tooltip="Delete"
-                                            press=".onDelete"/>
+                                            press=".onDelete"/> -->
                                     </HBox>
 
                                 </cells>
